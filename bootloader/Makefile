@@ -1,11 +1,29 @@
-CFLAGS=-target x86_64-unknown-windows -ffreestanding -fshort-wchar -mno-red-zone -I/usr/include/efi -I/usr/include/efi/x86_64 -I/usr/include/efi/protocol
+DISK = fat.img
+EFI_DIR = EFI/BOOT
+KERNEL_BIN = kernel/kernel.bin
+BOOTLOADER_BIN = boot/BOOTX64.EFI
 
-LDFLAGS=-target x86_64-unknown-windows  -nostdlib -Wl,-entry:efi_main -Wl,-subsystem:efi_application -fuse-ld=lld-link
+all: $(DISK)
 
-all:
-	clang $(CFLAGS) -c -o boot.o boot.c
-	clang $(CFLAGS) -c -o data.o data.c
-	clang $(LDFLAGS) -o BOOTx64.efi boot.o data.o
+$(DISK): $(BOOTLOADER_BIN) $(KERNEL_BIN)
+	# Create an empty 64MB disk image
+	truncate -s 64M $(DISK)
+
+	# Format the disk as FAT32
+	mkfs.vfat -F 32 $(DISK)
+
+	# Mount the disk and copy files
+	mmd -i $(DISK) ::/EFI
+	mmd -i $(DISK) ::/EFI/BOOT
+	mmd -i $(DISK) ::/ThatOS64
+	mcopy -i $(DISK) $(BOOTLOADER_BIN) ::/EFI/BOOT/
+	mcopy -i $(DISK) boot/loader/loader.bin ::/ThatOS64/
+	
+debug_run:
+	qemu-system-x86_64 -L /usr/share/OVMF -pflash OVMF_CODE.fd -drive file=fat.img,format=raw -s -S
+
+run:
+	qemu-system-x86_64 -L /usr/share/OVMF -pflash OVMF_CODE.fd -drive file=fat.img,format=raw
 
 clean:
-	rm -f *.o *.efi *.img *.iso
+	rm -f $(DISK)

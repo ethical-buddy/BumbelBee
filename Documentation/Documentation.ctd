@@ -1,0 +1,943 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cherrytree>
+  <bookmarks list=""/>
+  <node unique_id="1" master_id="0" name="Bumbell Bee" prog_lang="custom-colors" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="1" foreground="" ts_creation="1732323722" ts_lastsave="1732334848">
+    <rich_text>
+</rich_text>
+    <rich_text scale="h4" weight="heavy">Idea Behind the POSIX Kernel</rich_text>
+    <rich_text>
+• </rich_text>
+    <rich_text weight="heavy">Purpose:</rich_text>
+    <rich_text>
+◇ To create a lightweight, </rich_text>
+    <rich_text weight="heavy">POSIX-compliant kernel</rich_text>
+    <rich_text> that adheres to industry standards, making it suitable for running standard Unix applications.
+◇ Focused on modularity, scalability, and portability for learning and advanced use cases.
+
+
+• </rich_text>
+    <rich_text weight="heavy">Goals:</rich_text>
+    <rich_text>
+◇ Provide a </rich_text>
+    <rich_text weight="heavy">kernel from scratch</rich_text>
+    <rich_text> that implements essential POSIX functionalities, such as:▪ Process management (fork, exec).
+▪ File system operations.
+▪ Signals and inter-process communication (IPC).
+
+
+◇ Enable compatibility with existing POSIX-compliant libraries and applications.
+
+
+• </rich_text>
+    <rich_text weight="heavy">Vision:</rich_text>
+    <rich_text>
+◇ A robust, educational kernel for developers wanting to understand how POSIX standards work at the system level.
+◇ A foundation for custom Unix-like operating systems.
+
+
+
+</rich_text>
+    <node unique_id="2" master_id="0" name="?" prog_lang="custom-colors" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="" ts_creation="1732334706" ts_lastsave="1732334718">
+      <rich_text>
+</rich_text>
+      <rich_text scale="h4" weight="heavy">What is POSIX Compliance?</rich_text>
+      <rich_text>
+• </rich_text>
+      <rich_text weight="heavy">Definition:</rich_text>
+      <rich_text>
+◇ POSIX (Portable Operating System Interface) is a standard for maintaining compatibility between operating systems.
+
+
+• </rich_text>
+      <rich_text weight="heavy">Core Features of POSIX:</rich_text>
+      <rich_text>
+◇ </rich_text>
+      <rich_text weight="heavy">Process Management:</rich_text>
+      <rich_text> System calls like </rich_text>
+      <rich_text family="monospace">fork()</rich_text>
+      <rich_text>, </rich_text>
+      <rich_text family="monospace">exec()</rich_text>
+      <rich_text>, </rich_text>
+      <rich_text family="monospace">wait()</rich_text>
+      <rich_text>.
+◇ </rich_text>
+      <rich_text weight="heavy">File System:</rich_text>
+      <rich_text> Standard I/O calls such as </rich_text>
+      <rich_text family="monospace">open()</rich_text>
+      <rich_text>, </rich_text>
+      <rich_text family="monospace">read()</rich_text>
+      <rich_text>, </rich_text>
+      <rich_text family="monospace">write()</rich_text>
+      <rich_text>.
+◇ </rich_text>
+      <rich_text weight="heavy">Signals:</rich_text>
+      <rich_text> Mechanisms to handle asynchronous events (</rich_text>
+      <rich_text family="monospace">kill()</rich_text>
+      <rich_text>, </rich_text>
+      <rich_text family="monospace">signal()</rich_text>
+      <rich_text>).
+◇ </rich_text>
+      <rich_text weight="heavy">IPC:</rich_text>
+      <rich_text> Pipes, message queues, shared memory.
+◇ </rich_text>
+      <rich_text weight="heavy">Networking:</rich_text>
+      <rich_text> Sockets for inter-machine communication.
+
+
+• </rich_text>
+      <rich_text weight="heavy">Why POSIX Compliance?</rich_text>
+      <rich_text>
+◇ Enables portability of applications across different Unix-like systems.
+◇ Standardizes how software interacts with the OS.
+
+
+
+</rich_text>
+    </node>
+    <node unique_id="3" master_id="0" name="How to build" prog_lang="custom-colors" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="" ts_creation="1732334742" ts_lastsave="1732334746">
+      <rich_text>
+</rich_text>
+      <rich_text scale="h4" weight="heavy">How Will We Build It?</rich_text>
+      <rich_text>
+• </rich_text>
+      <rich_text weight="heavy">Step 1: Planning the Kernel</rich_text>
+      <rich_text>
+◇ Define the </rich_text>
+      <rich_text weight="heavy">scope of POSIX compliance</rich_text>
+      <rich_text> (basic syscalls vs full compliance).
+◇ Choose programming languages:▪ </rich_text>
+      <rich_text weight="heavy">C:</rich_text>
+      <rich_text> Primary language for portability and compliance.
+▪ </rich_text>
+      <rich_text weight="heavy">Assembly:</rich_text>
+      <rich_text> For low-level tasks like context switching.
+
+
+◇ Set up a </rich_text>
+      <rich_text weight="heavy">development environment</rich_text>
+      <rich_text>:▪ Compiler: </rich_text>
+      <rich_text family="monospace">gcc</rich_text>
+      <rich_text> or </rich_text>
+      <rich_text family="monospace">clang</rich_text>
+      <rich_text>.
+▪ Debugger: </rich_text>
+      <rich_text family="monospace">gdb</rich_text>
+      <rich_text>.
+▪ Emulator: </rich_text>
+      <rich_text family="monospace">QEMU</rich_text>
+      <rich_text>.
+
+
+
+
+• </rich_text>
+      <rich_text weight="heavy">Step 2: Bootstrapping</rich_text>
+      <rich_text>
+◇ Write a minimal bootloader (e.g., GRUB with Multiboot2).
+◇ Create an entry point for the kernel in assembly.
+◇ Initialize the stack and transition to C code.
+
+
+• </rich_text>
+      <rich_text weight="heavy">Step 3: Implement POSIX Core Features</rich_text>
+      <rich_text>
+◇ </rich_text>
+      <rich_text weight="heavy">Processes:</rich_text>
+      <rich_text> Implement </rich_text>
+      <rich_text family="monospace">fork()</rich_text>
+      <rich_text>, </rich_text>
+      <rich_text family="monospace">exec()</rich_text>
+      <rich_text>, and </rich_text>
+      <rich_text family="monospace">wait()</rich_text>
+      <rich_text> using task structures and a simple scheduler.
+◇ </rich_text>
+      <rich_text weight="heavy">File System:</rich_text>
+      <rich_text> Add a Virtual File System (VFS) layer with basic operations (</rich_text>
+      <rich_text family="monospace">open</rich_text>
+      <rich_text>, </rich_text>
+      <rich_text family="monospace">read</rich_text>
+      <rich_text>, </rich_text>
+      <rich_text family="monospace">write</rich_text>
+      <rich_text>).
+◇ </rich_text>
+      <rich_text weight="heavy">Signals:</rich_text>
+      <rich_text> Implement signal handling mechanisms.
+◇ </rich_text>
+      <rich_text weight="heavy">IPC:</rich_text>
+      <rich_text> Add pipes and shared memory management.
+
+
+• </rich_text>
+      <rich_text weight="heavy">Step 4: Debugging and Testing</rich_text>
+      <rich_text>
+◇ Use POSIX-compliant programs to test functionality (e.g., a basic shell).
+◇ Debug with tools like </rich_text>
+      <rich_text family="monospace">gdb</rich_text>
+      <rich_text> in the QEMU environment
+
+
+
+</rich_text>
+    </node>
+  </node>
+  <node unique_id="5" master_id="0" name="Step by step implementation" prog_lang="custom-colors" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="" ts_creation="1732334848" ts_lastsave="1732335038">
+    <node unique_id="6" master_id="0" name="bootstrapping the kernel" prog_lang="custom-colors" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="" ts_creation="1732334865" ts_lastsave="1732334882">
+      <rich_text weight="heavy">1. Bootstrapping the Kernel</rich_text>
+      <rich_text>
+• Write a Multiboot2 header for GRUB compatibility.
+
+• Transition from assembly to C:
+asm
+Copy code
+
+
+</rich_text>
+      <rich_text family="monospace">section .text
+global start
+start:
+    cli                 ; Disable interrupts
+    mov esp, 0x90000    ; Set up stack
+    call kernel_main    ; Jump to C code
+    hlt                 ; Halt if we return
+</rich_text>
+      <rich_text>
+
+
+• Initialize the kernel:
+c
+Copy code
+
+
+</rich_text>
+      <rich_text family="monospace">void kernel_main() {
+    init_gdt();         // Set up Global Descriptor Table
+    init_interrupts();  // Initialize the Interrupt Descriptor Table
+    init_memory();      // Set up paging and memory management
+}</rich_text>
+      <rich_text>
+
+
+
+</rich_text>
+      <node unique_id="7" master_id="0" name="Process management" prog_lang="custom-colors" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="" ts_creation="1732334904" ts_lastsave="1732335000">
+        <rich_text weight="heavy">2. Process Management (</rich_text>
+        <rich_text family="monospace" weight="heavy">fork</rich_text>
+        <rich_text weight="heavy">, </rich_text>
+        <rich_text family="monospace" weight="heavy">exec</rich_text>
+        <rich_text weight="heavy">)</rich_text>
+        <rich_text>
+• Define a basic task structure:
+c
+Copy code
+
+
+</rich_text>
+        <rich_text family="monospace">typedef struct task {
+    int pid;
+    uint64_t *stack;
+    struct task *next;
+} task_t;
+</rich_text>
+        <rich_text>
+
+
+• Implement </rich_text>
+        <rich_text family="monospace">fork</rich_text>
+        <rich_text> by duplicating the current task:
+c
+Copy code
+
+
+</rich_text>
+        <rich_text family="monospace">int fork() {
+    task_t *new_task = allocate_task();
+    copy_memory(new_task-&gt;stack, current_task-&gt;stack, STACK_SIZE);
+    return new_task-&gt;pid;
+}
+</rich_text>
+        <rich_text>
+
+
+• Implement </rich_text>
+        <rich_text family="monospace">exec</rich_text>
+        <rich_text> by replacing the task's memory:
+c
+Copy code
+
+
+</rich_text>
+        <rich_text family="monospace">int exec(const char *path) {
+    load_program(path, current_task-&gt;stack);
+    return 0; // Success
+}</rich_text>
+        <rich_text>
+
+
+
+</rich_text>
+        <node unique_id="8" master_id="0" name="File system operations" prog_lang="custom-colors" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="" ts_creation="1732334935" ts_lastsave="1732334942">
+          <rich_text weight="heavy">File System Operations (</rich_text>
+          <rich_text family="monospace" weight="heavy">open</rich_text>
+          <rich_text weight="heavy">, </rich_text>
+          <rich_text family="monospace" weight="heavy">read</rich_text>
+          <rich_text weight="heavy">, </rich_text>
+          <rich_text family="monospace" weight="heavy">write</rich_text>
+          <rich_text weight="heavy">)</rich_text>
+          <rich_text>
+• Create a Virtual File System (VFS) layer:c
+Copy code
+
+
+</rich_text>
+          <rich_text family="monospace">typedef struct file {
+    char *name;
+    uint64_t size;
+    void *data;
+} file_t;
+
+int open(const char *path);
+int read(int fd, void *buffer, size_t size);
+int write(int fd, const void *buffer, size_t size);</rich_text>
+          <rich_text>
+
+
+
+</rich_text>
+          <node unique_id="9" master_id="0" name="signals" prog_lang="custom-colors" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="" ts_creation="1732334957" ts_lastsave="1732334974">
+            <rich_text weight="heavy">4. Signals (</rich_text>
+            <rich_text family="monospace" weight="heavy">kill</rich_text>
+            <rich_text weight="heavy">, </rich_text>
+            <rich_text family="monospace" weight="heavy">signal</rich_text>
+            <rich_text weight="heavy">)</rich_text>
+            <rich_text>
+
+• Define signal types:
+c
+Copy code
+
+
+</rich_text>
+            <rich_text family="monospace">typedef void (*signal_handler_t)(int);
+void signal(int sig, signal_handler_t handler);
+void kill(int pid, int sig);
+</rich_text>
+            <rich_text>
+
+
+• Dispatch signals during task execution using a signal stack.
+
+
+</rich_text>
+          </node>
+        </node>
+      </node>
+      <node unique_id="10" master_id="0" name="IPC" prog_lang="custom-colors" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="" ts_creation="1732335000" ts_lastsave="1732335009">
+        <rich_text weight="heavy"> IPC (Pipes and Shared Memory)</rich_text>
+        <rich_text>
+• Implement pipes:
+c
+Copy code
+
+
+</rich_text>
+        <rich_text family="monospace">int pipe(int fds[2]) {
+    create_pipe(fds);
+    return 0;
+}
+</rich_text>
+        <rich_text>
+
+
+• Add shared memory regions for communication:
+c
+Copy code
+
+
+</rich_text>
+        <rich_text family="monospace">void *shmget(int key, size_t size);
+</rich_text>
+        <rich_text>
+
+
+
+</rich_text>
+      </node>
+    </node>
+  </node>
+  <node unique_id="11" master_id="0" name="CODE explanation sec" prog_lang="custom-colors" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="" ts_creation="1732335038" ts_lastsave="1732335051">
+    <node unique_id="12" master_id="0" name="Index" prog_lang="custom-colors" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="" ts_creation="1732335051" ts_lastsave="1732335066">
+      <rich_text>
+</rich_text>
+      <rich_text scale="h4" weight="heavy">Code Explanation Sections</rich_text>
+      <rich_text>
+</rich_text>
+      <rich_text weight="heavy">Section 1: Bootloader</rich_text>
+      <rich_text>
+• Multiboot2 header and transition to kernel entry point.
+• Explain how GRUB loads the kernel and passes control.
+
+</rich_text>
+      <rich_text weight="heavy">Section 2: Process Management</rich_text>
+      <rich_text>
+◇ Explain the </rich_text>
+      <rich_text family="monospace">fork()</rich_text>
+      <rich_text> implementation:▪ Task duplication using process control blocks (PCB).
+
+
+◇ Show how </rich_text>
+      <rich_text family="monospace">exec()</rich_text>
+      <rich_text> works to replace the process memory space.
+
+</rich_text>
+      <rich_text weight="heavy">Section 3: File System</rich_text>
+      <rich_text>
+◇ Explain the abstraction provided by the VFS layer.
+◇ How system calls like </rich_text>
+      <rich_text family="monospace">open</rich_text>
+      <rich_text> and </rich_text>
+      <rich_text family="monospace">read</rich_text>
+      <rich_text> interact with VFS.
+
+</rich_text>
+      <rich_text weight="heavy">Section 4: Signal Handling</rich_text>
+      <rich_text>
+◇ Discuss the signal delivery mechanism.
+◇ Explain how handlers are invoked during task execution.
+
+</rich_text>
+      <rich_text weight="heavy">Section 5: Inter-Process Communication</rich_text>
+      <rich_text>
+◇ Describe the creation and usage of pipes.
+◇ Explain the shared memory implementation.
+
+
+</rich_text>
+      <rich_text scale="h4" weight="heavy">Page 6: Tools and Resources</rich_text>
+      <rich_text>
+◇ </rich_text>
+      <rich_text weight="heavy">Development Tools:</rich_text>
+      <rich_text>
+▪ </rich_text>
+      <rich_text weight="heavy">Compiler:</rich_text>
+      <rich_text> </rich_text>
+      <rich_text family="monospace">gcc</rich_text>
+      <rich_text> or </rich_text>
+      <rich_text family="monospace">clang</rich_text>
+      <rich_text>
+▪ </rich_text>
+      <rich_text weight="heavy">Assembler:</rich_text>
+      <rich_text> </rich_text>
+      <rich_text family="monospace">nasm</rich_text>
+      <rich_text>
+▪ </rich_text>
+      <rich_text weight="heavy">Linker:</rich_text>
+      <rich_text> </rich_text>
+      <rich_text family="monospace">ld</rich_text>
+      <rich_text>
+▪ </rich_text>
+      <rich_text weight="heavy">Debugger:</rich_text>
+      <rich_text> </rich_text>
+      <rich_text family="monospace">gdb</rich_text>
+      <rich_text>
+▪ </rich_text>
+      <rich_text weight="heavy">Emulator:</rich_text>
+      <rich_text> </rich_text>
+      <rich_text family="monospace">qemu</rich_text>
+      <rich_text>
+
+
+◇ </rich_text>
+      <rich_text weight="heavy">Documentation Resources:</rich_text>
+      <rich_text>
+▪ POSIX Standards: IEEE Std 1003.1.
+▪ Intel x86 Architecture Manuals.
+▪ Multiboot2 Specification.
+
+
+◇ </rich_text>
+      <rich_text weight="heavy">Testing Tools:</rich_text>
+      <rich_text>
+▪ Write test programs using standard POSIX APIs (e.g., </rich_text>
+      <rich_text family="monospace">shell.c</rich_text>
+      <rich_text>).
+▪ Use unit testing for kernel components.
+
+
+
+
+</rich_text>
+      <rich_text scale="h4" weight="heavy">Page 7: Challenges and Roadmap</rich_text>
+      <rich_text>
+</rich_text>
+      <rich_text weight="heavy">Challenges:</rich_text>
+      <rich_text>
+◇ Managing context switches and process isolation.
+◇ Implementing robust file systems.
+◇ Debugging low-level interactions with hardware.
+
+</rich_text>
+      <rich_text weight="heavy">Roadmap:</rich_text>
+      <rich_text>
+1. Develop bootloader and kernel entry point.
+2. Implement memory management and paging.
+3. Build process management and scheduling.
+4. Add file system and POSIX syscalls.
+5. Implement signals and IPC.
+</rich_text>
+    </node>
+    <node unique_id="13" master_id="0" name="BOOTMAIN.C      = BOOTLOADER" prog_lang="custom-colors" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="" ts_creation="1732335221" ts_lastsave="1732335749">
+      <rich_text justification="left"></rich_text>
+      <rich_text>
+</rich_text>
+      <codebox char_offset="0" justification="left" frame_width="500" frame_height="100" width_in_pixels="1" syntax_highlighting="plain-text" highlight_brackets="1" show_line_numbers="0">// Boot loader.
+// 
+// Part of the boot sector, along with bootasm.S, which calls bootmain().
+// bootasm.S has put the processor into protected 32-bit mode.
+// bootmain() loads a multiboot kernel image from the disk starting at
+// sector 1 and then jumps to the kernel entry routine.
+
+#include "types.h"
+#include "x86.h"
+#include "memlayout.h"
+
+#define SECTSIZE  512
+
+// Define PIT ports and frequency
+struct mbheader {
+  uint32 magic;
+  uint32 flags;
+  uint32 checksum;
+  uint32 header_addr;
+  uint32 load_addr;
+  uint32 load_end_addr;
+  uint32 bss_end_addr;
+  uint32 entry_addr;
+};
+
+void readseg(uchar*, uint, uint);
+
+void
+bootmain(void)
+{
+  struct mbheader *hdr;
+  void (*entry)(void);
+  uint32 *x;
+  uint n;
+
+  x = (uint32*) 0x10000; // scratch space
+
+  // multiboot header must be in the first 8192 bytes
+  readseg((uchar*)x, 8192, 0);
+
+  for (n = 0; n &lt; 8192/4; n++)
+    if (x[n] == 0x1BADB002)
+      if ((x[n] + x[n+1] + x[n+2]) == 0)
+        goto found_it;
+
+  // failure
+  return;
+
+found_it:
+  hdr = (struct mbheader *) (x + n);
+
+  if (!(hdr-&gt;flags &amp; 0x10000))
+    return; // does not have load_* fields, cannot proceed
+  if (hdr-&gt;load_addr &gt; hdr-&gt;header_addr)
+    return; // invalid;
+  if (hdr-&gt;load_end_addr &lt; hdr-&gt;load_addr)
+    return; // no idea how much to load
+
+  readseg((uchar*) hdr-&gt;load_addr,
+    (hdr-&gt;load_end_addr - hdr-&gt;load_addr),
+    (n * 4) - (hdr-&gt;header_addr - hdr-&gt;load_addr));
+
+  if (hdr-&gt;bss_end_addr &gt; hdr-&gt;load_end_addr)
+    stosb((void*) hdr-&gt;load_end_addr, 0,
+      hdr-&gt;bss_end_addr - hdr-&gt;load_end_addr);
+
+
+  // Call the entry point from the multiboot header.
+  // Does not return!
+  entry = (void(*)(void))(hdr-&gt;entry_addr);
+  entry();
+}
+
+void
+waitdisk(void)
+{
+  // Wait for disk ready.
+  while((inb(0x1F7) &amp; 0xC0) != 0x40)
+    ;
+}
+
+// Read a single sector at offset into dst.
+void
+readsect(void *dst, uint offset)
+{
+  // Issue command.
+  waitdisk();
+  outb(0x1F2, 1);   // count = 1
+  outb(0x1F3, offset);
+  outb(0x1F4, offset &gt;&gt; 8);
+  outb(0x1F5, offset &gt;&gt; 16);
+  outb(0x1F6, (offset &gt;&gt; 24) | 0xE0);
+  outb(0x1F7, 0x20);  // cmd 0x20 - read sectors
+
+  // Read data.
+  waitdisk();
+  insl(0x1F0, dst, SECTSIZE/4);
+}
+
+// Read 'count' bytes at 'offset' from kernel into physical address 'pa'.
+// Might copy more than asked.
+void
+readseg(uchar* pa, uint count, uint offset)
+{
+  uchar* epa;
+
+  epa = pa + count;
+
+  // Round down to sector boundary.
+  pa -= offset % SECTSIZE;
+
+  // Translate from bytes to sectors; kernel starts at sector 1.
+  offset = (offset / SECTSIZE) + 1;
+
+  // If this is too slow, we could read lots of sectors at a time.
+  // We'd write more to memory than asked, but it doesn't matter --
+  // we load in increasing order.
+  for(; pa &lt; epa; pa += SECTSIZE, offset++)
+    readsect(pa, offset);
+}
+    </codebox>
+    </node>
+    <node unique_id="14" master_id="0" name="KEY COMPONENTS" prog_lang="custom-colors" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="" ts_creation="1732335806" ts_lastsave="1732335875">
+      <rich_text>This </rich_text>
+      <rich_text weight="heavy">bootloader</rich_text>
+      <rich_text> is designed to load a </rich_text>
+      <rich_text weight="heavy">Multiboot-compliant kernel</rich_text>
+      <rich_text> from disk and transfer control to the kernel's entry point. It works in tandem with an assembly file (</rich_text>
+      <rich_text family="monospace">bootasm.S</rich_text>
+      <rich_text>), which sets the CPU into </rich_text>
+      <rich_text weight="heavy">protected mode (32-bit)</rich_text>
+      <rich_text> before invoking </rich_text>
+      <rich_text family="monospace">bootmain()</rich_text>
+      <rich_text>.
+Here's a detailed breakdown of the code:
+
+
+</rich_text>
+      <rich_text scale="h3" weight="heavy">Key Components</rich_text>
+      <rich_text>
+
+</rich_text>
+      <rich_text scale="h4">1. </rich_text>
+      <rich_text scale="h4" weight="heavy">Multiboot Header (</rich_text>
+      <rich_text family="monospace" scale="h4" weight="heavy">struct mbheader</rich_text>
+      <rich_text scale="h4" weight="heavy">)</rich_text>
+      <rich_text>
+The Multiboot header is a structure used to identify a Multiboot-compliant kernel and provide necessary metadata about how to load the kernel.
+c
+Copy code
+
+
+</rich_text>
+      <rich_text family="monospace">struct mbheader {
+  uint32 magic;         // Multiboot magic number (0x1BADB002)
+  uint32 flags;         // Flags indicating supported features
+  uint32 checksum;      // Ensures (magic + flags + checksum) == 0
+  uint32 header_addr;   // Address of the Multiboot header
+  uint32 load_addr;     // Physical address to load the kernel
+  uint32 load_end_addr; // End address of the kernel in memory
+  uint32 bss_end_addr;  // End address of the uninitialized data segment (BSS)
+  uint32 entry_addr;    // Address of the kernel's entry point
+};
+</rich_text>
+      <rich_text>
+
+</rich_text>
+      <node unique_id="16" master_id="0" name="Multiboot header" prog_lang="custom-colors" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="" ts_creation="1732335875" ts_lastsave="1732335876">
+        <rich_text scale="h4">1. </rich_text>
+        <rich_text scale="h4" weight="heavy">Multiboot Header (</rich_text>
+        <rich_text family="monospace" scale="h4" weight="heavy">struct mbheader</rich_text>
+        <rich_text scale="h4" weight="heavy">)</rich_text>
+        <rich_text>
+The Multiboot header is a structure used to identify a Multiboot-compliant kernel and provide necessary metadata about how to load the kernel.
+c
+Copy code
+
+
+</rich_text>
+        <rich_text family="monospace">struct mbheader {
+  uint32 magic;         // Multiboot magic number (0x1BADB002)
+  uint32 flags;         // Flags indicating supported features
+  uint32 checksum;      // Ensures (magic + flags + checksum) == 0
+  uint32 header_addr;   // Address of the Multiboot header
+  uint32 load_addr;     // Physical address to load the kernel
+  uint32 load_end_addr; // End address of the kernel in memory
+  uint32 bss_end_addr;  // End address of the uninitialized data segment (BSS)
+  uint32 entry_addr;    // Address of the kernel's entry point
+};
+</rich_text>
+        <rich_text>
+</rich_text>
+      </node>
+      <node unique_id="17" master_id="0" name="main boot func" prog_lang="custom-colors" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="" ts_creation="1732335903" ts_lastsave="1732335907">
+        <rich_text>
+</rich_text>
+        <rich_text scale="h4" weight="heavy">Main Boot Function (</rich_text>
+        <rich_text family="monospace" scale="h4" weight="heavy">bootmain</rich_text>
+        <rich_text scale="h4" weight="heavy">)</rich_text>
+        <rich_text>
+The main function of the bootloader loads the kernel and transfers execution to the kernel's entry point.
+</rich_text>
+        <rich_text weight="heavy">Steps in </rich_text>
+        <rich_text family="monospace" weight="heavy">bootmain()</rich_text>
+        <rich_text weight="heavy">:</rich_text>
+        <rich_text>
+1. </rich_text>
+        <rich_text weight="heavy">Scratch Space and Multiboot Header Search:</rich_text>
+        <rich_text>
+c
+Copy code
+
+
+</rich_text>
+        <rich_text family="monospace">x = (uint32*) 0x10000; // Use address 0x10000 as temporary storage
+readseg((uchar*)x, 8192, 0); // Read the first 8192 bytes (16 sectors) from disk
+</rich_text>
+        <rich_text>
+
+• The Multiboot header must be within the first 8192 bytes of the kernel.
+• The </rich_text>
+        <rich_text family="monospace">readseg</rich_text>
+        <rich_text> function loads this segment into memory for inspection.
+
+
+• </rich_text>
+        <rich_text weight="heavy">Identify the Multiboot Header:</rich_text>
+        <rich_text>
+c
+Copy code
+
+
+</rich_text>
+        <rich_text family="monospace">for (n = 0; n &lt; 8192/4; n++) {
+    if (x[n] == 0x1BADB002) // Check for Multiboot magic number
+        if ((x[n] + x[n+1] + x[n+2]) == 0) // Verify checksum
+            goto found_it;
+}
+</rich_text>
+        <rich_text>
+
+◇ The loop scans the loaded segment for the </rich_text>
+        <rich_text weight="heavy">Multiboot magic number</rich_text>
+        <rich_text> (</rich_text>
+        <rich_text family="monospace">0x1BADB002</rich_text>
+        <rich_text>).
+◇ It also verifies the checksum to ensure the header is valid.
+
+
+• </rich_text>
+        <rich_text weight="heavy">Handle Invalid Header:</rich_text>
+        <rich_text> If the header is not found, the bootloader exits:
+c
+Copy code
+
+
+</rich_text>
+        <rich_text family="monospace">return;
+</rich_text>
+        <rich_text>
+
+
+• </rich_text>
+        <rich_text weight="heavy">Process the Multiboot Header:</rich_text>
+        <rich_text>
+c
+Copy code
+
+
+</rich_text>
+        <rich_text family="monospace">hdr = (struct mbheader *) (x + n); // Pointer to the Multiboot header
+
+if (!(hdr-&gt;flags &amp; 0x10000))
+    return; // The header lacks load fields; cannot proceed
+if (hdr-&gt;load_addr &gt; hdr-&gt;header_addr)
+    return; // Invalid addresses
+if (hdr-&gt;load_end_addr &lt; hdr-&gt;load_addr)
+    return; // Invalid range
+</rich_text>
+        <rich_text>
+
+◇ The header's fields are validated to ensure the kernel can be loaded.
+
+
+• </rich_text>
+        <rich_text weight="heavy">Load the Kernel into Memory:</rich_text>
+        <rich_text>
+c
+Copy code
+
+
+</rich_text>
+        <rich_text family="monospace">readseg((uchar*) hdr-&gt;load_addr,
+        (hdr-&gt;load_end_addr - hdr-&gt;load_addr),
+        (n * 4) - (hdr-&gt;header_addr - hdr-&gt;load_addr));
+</rich_text>
+        <rich_text>
+
+◇ The </rich_text>
+        <rich_text family="monospace">readseg</rich_text>
+        <rich_text> function is called to load the kernel from disk into memory.
+
+
+• </rich_text>
+        <rich_text weight="heavy">Zero-Out BSS Segment:</rich_text>
+        <rich_text>
+c
+Copy code
+
+
+</rich_text>
+        <rich_text family="monospace">if (hdr-&gt;bss_end_addr &gt; hdr-&gt;load_end_addr)
+    stosb((void*) hdr-&gt;load_end_addr, 0,
+          hdr-&gt;bss_end_addr - hdr-&gt;load_end_addr);
+</rich_text>
+        <rich_text>
+
+◇ The BSS (uninitialized data) segment is zeroed out using </rich_text>
+        <rich_text family="monospace">stosb</rich_text>
+        <rich_text>.
+
+
+• </rich_text>
+        <rich_text weight="heavy">Jump to Kernel Entry Point:</rich_text>
+        <rich_text>
+c
+Copy code
+
+
+</rich_text>
+        <rich_text family="monospace">entry = (void(*)(void))(hdr-&gt;entry_addr);
+entry(); // Transfer control to the kernel
+</rich_text>
+        <rich_text>
+
+◇ The bootloader jumps to the kernel's entry point, effectively handing over control to the kernel.
+
+
+</rich_text>
+      </node>
+      <node unique_id="18" master_id="0" name="helper func" prog_lang="custom-colors" tags="" readonly="0" nosearch_me="0" nosearch_ch="0" custom_icon_id="0" is_bold="0" foreground="" ts_creation="1732335987" ts_lastsave="1732335993">
+        <rich_text>
+</rich_text>
+        <rich_text scale="h4">3. </rich_text>
+        <rich_text scale="h4" weight="heavy">Helper Functions</rich_text>
+        <rich_text>
+
+</rich_text>
+        <rich_text family="monospace" scale="h5" weight="heavy">waitdisk()</rich_text>
+        <rich_text>
+Waits for the disk to be ready for operations:
+c
+Copy code
+
+
+</rich_text>
+        <rich_text family="monospace">while((inb(0x1F7) &amp; 0xC0) != 0x40);
+</rich_text>
+        <rich_text>
+
+• Reads the disk status register (port </rich_text>
+        <rich_text family="monospace">0x1F7</rich_text>
+        <rich_text>).
+• Waits until the disk is ready (</rich_text>
+        <rich_text family="monospace">0x40</rich_text>
+        <rich_text>).
+
+
+</rich_text>
+        <rich_text family="monospace" scale="h5" weight="heavy">readsect(void *dst, uint offset)</rich_text>
+        <rich_text>
+Reads a single disk sector into the destination address:
+c
+Copy code
+
+
+</rich_text>
+        <rich_text family="monospace">waitdisk(); // Wait for disk readiness
+outb(0x1F2, 1); // Sector count = 1
+outb(0x1F3, offset); // Set sector offset (low byte)
+outb(0x1F7, 0x20); // Command: Read sector
+waitdisk(); // Wait for operation to complete
+insl(0x1F0, dst, SECTSIZE/4); // Copy data into destination
+</rich_text>
+        <rich_text>
+
+
+</rich_text>
+        <rich_text family="monospace" scale="h5" weight="heavy">readseg(uchar* pa, uint count, uint offset)</rich_text>
+        <rich_text>
+Reads multiple bytes (spanning sectors) into memory:
+c
+Copy code
+
+
+</rich_text>
+        <rich_text family="monospace">epa = pa + count; // End pointer
+pa -= offset % SECTSIZE; // Align to sector boundary
+offset = (offset / SECTSIZE) + 1; // Start sector at offset 1
+
+for(; pa &lt; epa; pa += SECTSIZE, offset++)
+    readsect(pa, offset); // Read each sector
+</rich_text>
+        <rich_text>
+
+◇ Aligns the address to sector boundaries.
+◇ Reads data sector by sector into the specified memory region.
+
+
+</rich_text>
+        <rich_text scale="h3" weight="heavy">Workflow Overview</rich_text>
+        <rich_text>
+1. </rich_text>
+        <rich_text weight="heavy">Search for Multiboot Header:</rich_text>
+        <rich_text>
+◇ Load the first 8192 bytes of the kernel to locate the Multiboot header.
+
+
+• </rich_text>
+        <rich_text weight="heavy">Validate the Multiboot Header:</rich_text>
+        <rich_text>
+◇ Ensure the header is valid using the magic number, checksum, and flags.
+
+
+• </rich_text>
+        <rich_text weight="heavy">Load the Kernel:</rich_text>
+        <rich_text>
+◇ Use the </rich_text>
+        <rich_text family="monospace">load_addr</rich_text>
+        <rich_text> and </rich_text>
+        <rich_text family="monospace">load_end_addr</rich_text>
+        <rich_text> fields to load the kernel into memory.
+
+
+• </rich_text>
+        <rich_text weight="heavy">Zero-Out the BSS:</rich_text>
+        <rich_text>
+◇ Ensure the BSS segment is initialized to zero.
+
+
+• </rich_text>
+        <rich_text weight="heavy">Jump to Kernel:</rich_text>
+        <rich_text>
+◇ Transfer control to the kernel's entry point specified in </rich_text>
+        <rich_text family="monospace">entry_addr</rich_text>
+        <rich_text>.
+
+	</rich_text>
+      </node>
+    </node>
+  </node>
+</cherrytree>

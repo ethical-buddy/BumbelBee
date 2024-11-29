@@ -1,7 +1,7 @@
 ;
 ; The IDT
 ;
-; isr.asm
+; irq.asm
 ;
 
 ; Notify File of the External Interrupt Handler
@@ -65,14 +65,13 @@ QUADWORD_SIZE:          equ 0x08
     POPALL
 %endmacro
 
-
 %macro ISR_NOERRCODE 1
   global isr_%1
   isr_%1:
     cli
 
-    push qword 0
-    push qword %1
+    push qword 0               ; Placeholder for error code
+    push qword %1              ; ISR Number
 
     SAVE_REGS_AND_CALL_HANDLER isr_handler
 
@@ -89,7 +88,7 @@ QUADWORD_SIZE:          equ 0x08
   isr_%1:
     cli
 
-    push qword %1
+    push qword %1              ; ISR Number
 
     SAVE_REGS_AND_CALL_HANDLER isr_handler
 
@@ -101,6 +100,7 @@ QUADWORD_SIZE:          equ 0x08
     iretq
 %endmacro
 
+; ISRs (Exceptions) - Without Error Code
 ISR_NOERRCODE 0
 ISR_NOERRCODE 1
 ISR_NOERRCODE 2
@@ -110,21 +110,18 @@ ISR_NOERRCODE 5
 ISR_NOERRCODE 6
 ISR_NOERRCODE 7
 
-; WARNING
-; ISR 8 is a special case. Usually this would be a double fault handler
-; and would require an error code. However, we do not remap the PIC in
-; this chapter, so it tends to field an interrupt request from the PIC
-; which doesn't push an error code onto the stack. For the purposes of
-; this chapter, I'm using the NOERRCODE macro to avoid a page fault
-; when returning from this interrupt.
+; IRQ 8 (Special case) - No Error Code
 ISR_NOERRCODE 8
 
+; ISRs (Exceptions) - With Error Code
+ISR_ERRCODE  10
+ISR_ERRCODE  11
+ISR_ERRCODE  12
+ISR_ERRCODE  13
+ISR_ERRCODE  14
+
+; ISRs (Exceptions) - Without Error Code
 ISR_NOERRCODE 9
-ISR_ERRCODE   10
-ISR_ERRCODE   11
-ISR_ERRCODE   12
-ISR_ERRCODE   13
-ISR_ERRCODE   14
 ISR_NOERRCODE 15
 ISR_NOERRCODE 16
 ISR_NOERRCODE 17
@@ -142,3 +139,42 @@ ISR_NOERRCODE 28
 ISR_NOERRCODE 29
 ISR_NOERRCODE 30
 ISR_NOERRCODE 31
+
+; IRQ Handlers (IRQ0 to IRQ15)
+; These IRQs generally don't require error codes
+%macro IRQ_HANDLER 1
+  global irq_%1
+  irq_%1:
+    cli
+
+    push qword 0               ; No error code for IRQs
+    push qword %1              ; IRQ Number
+
+    SAVE_REGS_AND_CALL_HANDLER isr_handler
+
+    ; Pop the stack by 2 quadwords for the IRQ Number and Error Code
+    add rsp, 0x10
+
+    sti
+
+    iretq
+%endmacro
+
+; Define IRQ Handlers (IRQ 0 to IRQ 15)
+IRQ_HANDLER 0
+IRQ_HANDLER 1
+IRQ_HANDLER 2
+IRQ_HANDLER 3
+IRQ_HANDLER 4
+IRQ_HANDLER 5
+IRQ_HANDLER 6
+IRQ_HANDLER 7
+IRQ_HANDLER 8
+IRQ_HANDLER 9
+IRQ_HANDLER 10
+IRQ_HANDLER 11
+IRQ_HANDLER 12
+IRQ_HANDLER 13
+IRQ_HANDLER 14
+IRQ_HANDLER 15
+

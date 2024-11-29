@@ -37,6 +37,24 @@ extern void isr_29();
 extern void isr_30();
 extern void isr_31();
 
+// Define the IRQ handlers for remapped PIC interrupts (32–47)
+extern void irq_0();   // Timer
+extern void irq_1();   // Keyboard
+extern void irq_2();   // Cascaded signals from slave PIC
+extern void irq_3();   // Serial port 2
+extern void irq_4();   // Serial port 1
+extern void irq_5();   // Parallel port 2
+extern void irq_6();   // Floppy disk
+extern void irq_7();   // Parallel port 1
+extern void irq_8();   // CMOS clock
+extern void irq_9();   // Free for peripherals or legacy SCSI
+extern void irq_10();  // Free for peripherals or SCSI
+extern void irq_11();  // Free for peripherals or SCSI
+extern void irq_12();  // PS/2 Mouse
+extern void irq_13();  // FPU, coprocessor, or inter-processor
+extern void irq_14();  // Primary ATA Hard Disk
+extern void irq_15();  // Secondary ATA Hard Disk
+
 
 // Function to install the ISR's to the IDT and
 // load the IDT to the CPU
@@ -57,6 +75,8 @@ typedef struct __attribute__((packed)) {
     // Define the return frame for the iretq call
     u64_t rip, cs, eflags, rsp, ss;
 } registers;
+
+void remap_pic();
 
 
 // One handler for all ISR's

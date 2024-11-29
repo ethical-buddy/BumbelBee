@@ -3,8 +3,8 @@
 #include <driver/vga.h>
 
 int main() {
+    remap_pic();
     isr_install();
-
     set_cursor_pos(0, 0);
     clearwin(COLOR_GRN, COLOR_BLK);
 

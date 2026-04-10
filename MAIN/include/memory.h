@@ -6,6 +6,8 @@
 
 void memory_init(struct boot_info *boot_info);
 void *page_alloc(void);
+u64 memory_read_cr3(void);
+void memory_write_cr3(u64 value);
 u64 memory_total_bytes(void);
 u64 memory_used_bytes(void);
 u64 memory_page_faults(void);

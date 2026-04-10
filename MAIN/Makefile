@@ -24,26 +24,37 @@ KERNEL_C_SRCS := \
 	$(KERNEL_DIR)/string.c \
 	$(KERNEL_DIR)/fmt.c \
 	$(KERNEL_DIR)/bootinfo.c \
+	$(KERNEL_DIR)/aspace.c \
 	$(KERNEL_DIR)/idt.c \
 	$(KERNEL_DIR)/interrupts.c \
 	$(KERNEL_DIR)/pic.c \
 	$(KERNEL_DIR)/pit.c \
 	$(KERNEL_DIR)/keyboard.c \
+	$(KERNEL_DIR)/mouse.c \
 	$(KERNEL_DIR)/cpuid.c \
 	$(KERNEL_DIR)/apic.c \
 	$(KERNEL_DIR)/smp.c \
+	$(KERNEL_DIR)/gdt.c \
 	$(KERNEL_DIR)/spinlock.c \
 	$(KERNEL_DIR)/memory.c \
+	$(KERNEL_DIR)/elf.c \
 	$(KERNEL_DIR)/trace.c \
+	$(KERNEL_DIR)/manual.c \
 	$(KERNEL_DIR)/sched.c \
 	$(KERNEL_DIR)/ata.c \
 	$(KERNEL_DIR)/fs.c \
+	$(KERNEL_DIR)/netfs.c \
+	$(KERNEL_DIR)/builtin_exec.c \
+	$(KERNEL_DIR)/vfs.c \
+	$(KERNEL_DIR)/syscall.c \
+	$(KERNEL_DIR)/usermode.c \
 	$(KERNEL_DIR)/shell.c \
 	$(KERNEL_DIR)/workload.c
 
 KERNEL_ASM_SRCS := \
 	$(KERNEL_DIR)/entry64.asm \
 	$(KERNEL_DIR)/isr_stub.asm \
+	$(KERNEL_DIR)/usermode_entry.asm \
 	$(KERNEL_DIR)/switch.asm
 
 KERNEL_C_OBJS := $(patsubst $(KERNEL_DIR)/%.c,$(BUILD_DIR)/%.o,$(KERNEL_C_SRCS))
@@ -83,7 +94,7 @@ run qemu: $(BUILD_DIR)/os-image.bin
 	qemu-system-x86_64 -drive file=$(BUILD_DIR)/os-image.bin,format=raw,if=ide -serial stdio -display none -no-reboot -d guest_errors
 
 run-window window: $(BUILD_DIR)/os-image.bin
-	qemu-system-x86_64 -drive file=$(BUILD_DIR)/os-image.bin,format=raw,if=ide -serial stdio -display gtk -no-reboot
+	qemu-system-x86_64 -drive file=$(BUILD_DIR)/os-image.bin,format=raw,if=ide -serial stdio -display gtk,zoom-to-fit=on,grab-on-hover=on -device VGA,vgamem_mb=16 -no-reboot
 
 debug: $(BUILD_DIR)/os-image.bin
 	qemu-system-x86_64 -drive file=$(BUILD_DIR)/os-image.bin,format=raw,if=ide -serial stdio -display curses -no-reboot -s -S

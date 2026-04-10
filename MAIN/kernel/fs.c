@@ -1,5 +1,6 @@
 #include "fs.h"
 
+#include "aspace.h"
 #include "ata.h"
 #include "console.h"
 #include "serial.h"
@@ -7,7 +8,7 @@
 #include "trace.h"
 
 #define FS_MAGIC 0x43445836
-#define FS_VERSION 2
+#define FS_VERSION 3
 #define FS_START_LBA 2048
 #define FS_TOTAL_SECTORS 4096
 #define FS_INODE_SECTORS 8
@@ -17,6 +18,7 @@
 
 #define INODE_TYPE_NONE 0
 #define INODE_TYPE_TRACE 1
+#define INODE_TYPE_EXEC 2
 
 struct __attribute__((packed)) fs_superblock {
     u32 magic;
@@ -42,12 +44,53 @@ struct __attribute__((packed)) fs_inode {
     u64 duration_ticks;
     u64 event_count;
     u64 sequence_hash;
-    u8 reserved[32];
+    char name[24];
+    u8 reserved[44];
+};
+
+struct __attribute__((packed)) exec_elf64_ehdr {
+    u8 ident[16];
+    u16 type;
+    u16 machine;
+    u32 version;
+    u64 entry;
+    u64 phoff;
+    u64 shoff;
+    u32 flags;
+    u16 ehsize;
+    u16 phentsize;
+    u16 phnum;
+    u16 shentsize;
+    u16 shnum;
+    u16 shstrndx;
+};
+
+struct __attribute__((packed)) exec_elf64_phdr {
+    u32 type;
+    u32 flags;
+    u64 offset;
+    u64 vaddr;
+    u64 paddr;
+    u64 filesz;
+    u64 memsz;
+    u64 align;
 };
 
 static struct fs_superblock superblock;
 static struct fs_inode inodes[FS_MAX_INODES];
 static int fs_online;
+
+static const u8 ring3demo_code[] = {
+    0x66, 0xb8, 0x33, 0x00, 0x8e, 0xd8, 0x8e, 0xc0, 0x8e, 0xe0, 0x8e, 0xe8,
+    0xb8, 0x01, 0x00, 0x00, 0x00, 0x48, 0x8d, 0x1d, 0x11, 0x00, 0x00, 0x00,
+    0xb9, 0x21, 0x00, 0x00, 0x00, 0xcd, 0x80, 0xb8, 0x03, 0x00, 0x00, 0x00,
+    0xcd, 0x80, 0xf4, 0xeb, 0xfd, 0x72, 0x69, 0x6e, 0x67, 0x33, 0x20, 0x66,
+    0x69, 0x6c, 0x65, 0x2d, 0x62, 0x61, 0x63, 0x6b, 0x65, 0x64, 0x20, 0x65,
+    0x6c, 0x66, 0x20, 0x73, 0x61, 0x79, 0x73, 0x20, 0x68, 0x65, 0x6c, 0x6c,
+    0x6f, 0x0a
+};
+
+static const u8 stub_exec_code[] = {0xf4, 0xeb, 0xfd};
 
 static u32 fs_trace_count(void) {
     u32 count = 0;
@@ -57,6 +100,109 @@ static u32 fs_trace_count(void) {
         }
     }
     return count;
+}
+
+static int path_eq(const char *lhs, const char *rhs) {
+    return strcmp(lhs, rhs) == 0;
+}
+
+static struct fs_inode *fs_find_exec(const char *path) {
+    for (u32 i = 0; i < FS_MAX_INODES; ++i) {
+        if (inodes[i].used && inodes[i].type == INODE_TYPE_EXEC && path_eq(inodes[i].name, path)) {
+            return &inodes[i];
+        }
+    }
+    return NULL;
+}
+
+static u32 copy_name(char *dst, u32 cap, const char *src) {
+    u32 len = 0;
+    while (src && src[len] && len + 1 < cap) {
+        dst[len] = src[len];
+        len++;
+    }
+    dst[len] = '\0';
+    return len;
+}
+
+static u32 build_ring3demo_image(u8 *out, u32 cap) {
+    struct exec_elf64_ehdr ehdr;
+    struct exec_elf64_phdr phdr;
+    u32 code_off = sizeof(ehdr) + sizeof(phdr);
+    if (!out || cap < code_off + sizeof(ring3demo_code)) {
+        return 0;
+    }
+    memset(&ehdr, 0, sizeof(ehdr));
+    memset(&phdr, 0, sizeof(phdr));
+    ehdr.ident[0] = 0x7f;
+    ehdr.ident[1] = 'E';
+    ehdr.ident[2] = 'L';
+    ehdr.ident[3] = 'F';
+    ehdr.ident[4] = 2;
+    ehdr.ident[5] = 1;
+    ehdr.ident[6] = 1;
+    ehdr.type = 2;
+    ehdr.machine = 62;
+    ehdr.version = 1;
+    ehdr.entry = ASPACE_USER_BASE + code_off;
+    ehdr.phoff = sizeof(ehdr);
+    ehdr.ehsize = sizeof(ehdr);
+    ehdr.phentsize = sizeof(phdr);
+    ehdr.phnum = 1;
+
+    phdr.type = 1;
+    phdr.flags = 5;
+    phdr.offset = 0;
+    phdr.vaddr = ASPACE_USER_BASE;
+    phdr.paddr = ASPACE_USER_BASE;
+    phdr.filesz = code_off + sizeof(ring3demo_code);
+    phdr.memsz = code_off + sizeof(ring3demo_code);
+    phdr.align = 0x1000;
+
+    memcpy(out, &ehdr, sizeof(ehdr));
+    memcpy(out + sizeof(ehdr), &phdr, sizeof(phdr));
+    memcpy(out + code_off, ring3demo_code, sizeof(ring3demo_code));
+    return code_off + sizeof(ring3demo_code);
+}
+
+static u32 build_stub_exec_image(u8 *out, u32 cap, u64 entry) {
+    struct exec_elf64_ehdr ehdr;
+    struct exec_elf64_phdr phdr;
+    u32 code_off = sizeof(ehdr) + sizeof(phdr);
+    if (!out || cap < code_off + sizeof(stub_exec_code)) {
+        return 0;
+    }
+    memset(&ehdr, 0, sizeof(ehdr));
+    memset(&phdr, 0, sizeof(phdr));
+    ehdr.ident[0] = 0x7f;
+    ehdr.ident[1] = 'E';
+    ehdr.ident[2] = 'L';
+    ehdr.ident[3] = 'F';
+    ehdr.ident[4] = 2;
+    ehdr.ident[5] = 1;
+    ehdr.ident[6] = 1;
+    ehdr.type = 2;
+    ehdr.machine = 62;
+    ehdr.version = 1;
+    ehdr.entry = entry;
+    ehdr.phoff = sizeof(ehdr);
+    ehdr.ehsize = sizeof(ehdr);
+    ehdr.phentsize = sizeof(phdr);
+    ehdr.phnum = 1;
+
+    phdr.type = 1;
+    phdr.flags = 5;
+    phdr.offset = 0;
+    phdr.vaddr = 0x401000;
+    phdr.paddr = 0x401000;
+    phdr.filesz = code_off + sizeof(stub_exec_code);
+    phdr.memsz = code_off + sizeof(stub_exec_code);
+    phdr.align = 0x1000;
+
+    memcpy(out, &ehdr, sizeof(ehdr));
+    memcpy(out + sizeof(ehdr), &phdr, sizeof(phdr));
+    memcpy(out + code_off, stub_exec_code, sizeof(stub_exec_code));
+    return code_off + sizeof(stub_exec_code);
 }
 
 static int fs_flush_superblock(void) {
@@ -114,6 +260,81 @@ static struct fs_inode *fs_alloc_inode(void) {
     return NULL;
 }
 
+static int fs_write_raw_file(struct fs_inode *inode, const void *data, u32 bytes) {
+    u8 sector_buf[FS_SECTOR_SIZE];
+    const u8 *src = (const u8 *)data;
+    u32 sectors = (bytes + FS_SECTOR_SIZE - 1) / FS_SECTOR_SIZE;
+    u32 start_lba = superblock.next_free_lba;
+    if (!inode || !data) {
+        return -1;
+    }
+    if (sectors == 0) {
+        sectors = 1;
+    }
+    if (superblock.next_free_lba + sectors > FS_START_LBA + FS_TOTAL_SECTORS) {
+        return -1;
+    }
+    for (u32 i = 0; i < sectors; ++i) {
+        u32 offset = i * FS_SECTOR_SIZE;
+        u32 chunk = bytes > offset ? bytes - offset : 0;
+        if (chunk > FS_SECTOR_SIZE) {
+            chunk = FS_SECTOR_SIZE;
+        }
+        memset(sector_buf, 0, sizeof(sector_buf));
+        if (chunk) {
+            memcpy(sector_buf, src + offset, chunk);
+        }
+        if (ata_write28(start_lba + i, 1, sector_buf) != 0) {
+            return -1;
+        }
+    }
+    inode->size_bytes = bytes;
+    inode->start_lba = start_lba;
+    inode->sector_count = sectors;
+    superblock.next_free_lba += sectors;
+    return 0;
+}
+
+static int fs_seed_exec_file(const char *path, const void *data, u32 bytes) {
+    struct fs_inode *inode;
+    if (fs_find_exec(path)) {
+        return 0;
+    }
+    inode = fs_alloc_inode();
+    if (!inode) {
+        return -1;
+    }
+    inode->type = INODE_TYPE_EXEC;
+    copy_name(inode->name, sizeof(inode->name), path);
+    if (fs_write_raw_file(inode, data, bytes) != 0) {
+        inode->used = 0;
+        return -1;
+    }
+    return 0;
+}
+
+static void fs_seed_execs(void) {
+    u8 ring3demo_image[256];
+    u8 stub_image[128];
+    u32 bytes = build_ring3demo_image(ring3demo_image, sizeof(ring3demo_image));
+    u32 stub_bytes;
+    if (bytes) {
+        fs_seed_exec_file("/bin/ring3demo", ring3demo_image, bytes);
+    }
+    stub_bytes = build_stub_exec_image(stub_image, sizeof(stub_image), 0x401000);
+    if (stub_bytes) {
+        fs_seed_exec_file("/bin/ping", stub_image, stub_bytes);
+    }
+    stub_bytes = build_stub_exec_image(stub_image, sizeof(stub_image), 0x401080);
+    if (stub_bytes) {
+        fs_seed_exec_file("/bin/ps", stub_image, stub_bytes);
+    }
+    stub_bytes = build_stub_exec_image(stub_image, sizeof(stub_image), 0x4010c0);
+    if (stub_bytes) {
+        fs_seed_exec_file("/bin/netstat", stub_image, stub_bytes);
+    }
+}
+
 void fs_init(void) {
     ata_init();
     fs_online = 0;
@@ -130,6 +351,9 @@ void fs_init(void) {
         }
     }
     fs_online = 1;
+    fs_seed_execs();
+    fs_flush_inodes();
+    fs_flush_superblock();
 }
 
 void fs_list_root(void) {
@@ -137,6 +361,12 @@ void fs_list_root(void) {
     serial_printf("/\n");
     console_printf("  trace/\n");
     serial_printf("  trace/\n");
+    console_printf("  bin/\n");
+    serial_printf("  bin/\n");
+    console_printf("  net/\n");
+    serial_printf("  net/\n");
+    console_printf("  proc/\n");
+    serial_printf("  proc/\n");
 }
 
 int fs_write_trace_session(const void *data, u32 bytes, const struct trace_session_info *info, u32 *session_id) {
@@ -315,4 +545,58 @@ void fs_traceview(u32 session_id) {
                       buf[i].data0,
                       buf[i].data1);
     }
+}
+
+u32 fs_snapshot_traces(struct fs_trace_file_info *out, u32 max_entries) {
+    u32 count = 0;
+    if (!out) {
+        return 0;
+    }
+    for (u32 i = 0; i < FS_MAX_INODES && count < max_entries; ++i) {
+        if (!inodes[i].used || inodes[i].type != INODE_TYPE_TRACE) {
+            continue;
+        }
+        out[count].session_id = inodes[i].session_id;
+        out[count].size_bytes = inodes[i].size_bytes;
+        out[count].profile_id = inodes[i].profile_id;
+        out[count].event_count = inodes[i].event_count;
+        out[count].duration_ticks = inodes[i].duration_ticks;
+        count++;
+    }
+    return count;
+}
+
+int fs_read_exec_file(const char *path, void *buffer, u32 *bytes) {
+    struct fs_inode *inode = fs_find_exec(path);
+    u8 sector_buf[FS_SECTOR_SIZE];
+    u8 *dst = (u8 *)buffer;
+    if (!fs_online || !inode || !buffer || !bytes) {
+        return -1;
+    }
+    for (u32 i = 0; i < inode->sector_count; ++i) {
+        u32 offset = i * FS_SECTOR_SIZE;
+        u32 chunk = inode->size_bytes - offset;
+        if (chunk > FS_SECTOR_SIZE) {
+            chunk = FS_SECTOR_SIZE;
+        }
+        if (ata_read28(inode->start_lba + i, 1, sector_buf) != 0) {
+            return -1;
+        }
+        memcpy(dst + offset, sector_buf, chunk);
+    }
+    *bytes = inode->size_bytes;
+    return 0;
+}
+
+u32 fs_snapshot_execs(char paths[][32], u32 max_entries) {
+    u32 count = 0;
+    for (u32 i = 0; i < FS_MAX_INODES && count < max_entries; ++i) {
+        if (!inodes[i].used || inodes[i].type != INODE_TYPE_EXEC) {
+            continue;
+        }
+        memset(paths[count], 0, 32);
+        copy_name(paths[count], 32, inodes[i].name);
+        count++;
+    }
+    return count;
 }

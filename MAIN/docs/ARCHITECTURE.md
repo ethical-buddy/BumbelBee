@@ -66,6 +66,9 @@ Implemented now:
 - Interactive shell on serial input with kernel command dispatch
 - In-memory trace event capture and session listing
 - Synthetic `attack_sim` and `sysload` research workloads
+- Virtual packet filesystem (`/net`) that models packet transmit/receive/configuration as file operations
+- Unified VFS path model for `/net` and `/proc` with syscall-style open/read/write/close
+- Initial syscall ABI for `open`, `read`, `write`, `close`, `fork`, `execve`, and `waitpid`
 
 Planned next:
 

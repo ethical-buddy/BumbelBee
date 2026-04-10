@@ -2,7 +2,7 @@
 
 ## Goal
 
-This roadmap describes how to evolve `codex64` from its current replay-capable prototype into a stricter deterministic replay kernel. It is tied directly to this repository and names the files and subsystem interfaces that should change.
+This roadmap describes how to evolve `BB` from its current replay-capable prototype into a stricter deterministic replay kernel. It is tied directly to this repository and names the files and subsystem interfaces that should change.
 
 ## Current State
 
@@ -287,7 +287,7 @@ If the project wants a stronger research claim, move some replay control below t
 
 ### Suggested approach
 
-- keep `codex64` as the guest research kernel
+- keep `BB` as the guest research kernel
 - run under QEMU with custom instrumentation
 - log or inject external device events at the VM boundary
 - let the guest log internal scheduler and fault behavior

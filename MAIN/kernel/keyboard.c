@@ -1,3 +1,4 @@
+#include "console.h"
 #include "keyboard.h"
 
 #include "trace.h"
@@ -7,6 +8,7 @@ static unsigned head;
 static unsigned tail;
 static int left_shift;
 static int right_shift;
+static int extended_prefix;
 
 static const char normal_map[128] = {
     [0x02] = '1', [0x03] = '2', [0x04] = '3', [0x05] = '4',
@@ -45,6 +47,7 @@ void keyboard_init(void) {
     tail = 0;
     left_shift = 0;
     right_shift = 0;
+    extended_prefix = 0;
 }
 
 void keyboard_handle_scancode(int scancode) {
@@ -52,6 +55,29 @@ void keyboard_handle_scancode(int scancode) {
     int key = scancode & 0x7f;
     int shifted = left_shift || right_shift;
     char ch;
+    if (scancode == 0xe0) {
+        extended_prefix = 1;
+        return;
+    }
+    if (extended_prefix) {
+        extended_prefix = 0;
+        if (!released && key == 0x49) {
+            console_scroll(-5);
+            return;
+        }
+        if (!released && key == 0x51) {
+            console_scroll(5);
+            return;
+        }
+        if (!released && key == 0x47) {
+            console_scroll_top();
+            return;
+        }
+        if (!released && key == 0x4f) {
+            console_scroll_bottom();
+            return;
+        }
+    }
     if (key == 0x2a) {
         left_shift = released ? 0 : 1;
         return;

@@ -48,11 +48,35 @@ enable_a20:
     ret
 
 load_kernel:
+    mov bx, KERNEL_SECTORS
+    mov word [kernel_dap + 4], 0x0000
+    mov word [kernel_dap + 6], (KERNEL_LOAD_ADDR >> 4)
+    mov dword [kernel_dap + 8], KERNEL_LBA
+    mov dword [kernel_dap + 12], 0
+.chunk_loop:
+    cmp bx, 0
+    je .done
+    mov cx, bx
+    cmp cx, 127
+    jbe .chunk_size_ready
+    mov cx, 127
+.chunk_size_ready:
+    mov [kernel_dap + 2], cx
     mov si, kernel_dap
     mov ah, 0x42
     mov dl, [BOOTINFO_ADDR + 0]
     int 0x13
     jc disk_fail
+    sub bx, cx
+    mov ax, cx
+    shl ax, 5
+    add [kernel_dap + 6], ax
+    add word [kernel_dap + 8], cx
+    adc word [kernel_dap + 10], 0
+    adc word [kernel_dap + 12], 0
+    adc word [kernel_dap + 14], 0
+    jmp .chunk_loop
+.done:
     ret
 
 disk_fail:
@@ -93,12 +117,12 @@ protected_mode_entry:
     mov esp, 0x90000
 
     mov eax, pdpt_table
-    or eax, 0x003
+    or eax, 0x007
     mov [pml4_table], eax
     mov dword [pml4_table + 4], 0
 
     mov eax, pd_table
-    or eax, 0x003
+    or eax, 0x007
     mov [pdpt_table], eax
     mov dword [pdpt_table + 4], 0
 
@@ -106,7 +130,7 @@ protected_mode_entry:
 .map_loop:
     mov eax, ecx
     shl eax, 21
-    or eax, 0x083
+    or eax, 0x087
     mov [pd_table + ecx * 8], eax
     mov dword [pd_table + ecx * 8 + 4], 0
     inc ecx

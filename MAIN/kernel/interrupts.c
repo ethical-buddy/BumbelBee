@@ -5,10 +5,12 @@
 #include "interrupts.h"
 #include "keyboard.h"
 #include "memory.h"
+#include "mouse.h"
 #include "pic.h"
 #include "pit.h"
 #include "sched.h"
 #include "trace.h"
+#include "usermode.h"
 
 void idt_record_irq(u8 vector);
 
@@ -39,6 +41,13 @@ void isr_dispatch(struct interrupt_frame *frame) {
     case 33:
         keyboard_handle_scancode((int)inb(0x60));
         pic_eoi(1);
+        break;
+    case 44:
+        mouse_handle_data(inb(0x60));
+        pic_eoi(12);
+        break;
+    case 0x80:
+        usermode_handle_syscall(frame);
         break;
     default:
         if (frame->vector >= 32 && frame->vector <= 47) {

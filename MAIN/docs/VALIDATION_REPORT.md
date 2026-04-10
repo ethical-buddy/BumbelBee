@@ -2,7 +2,7 @@
 
 ## Scope
 
-This report documents direct QEMU validation of the current `codex64` implementation and compares the observed behavior with the intended system goals.
+This report documents direct QEMU validation of the current `BB` implementation and compares the observed behavior with the intended system goals.
 
 Date of validation:
 
@@ -39,9 +39,9 @@ make run-window
 Observed boot output:
 
 ```text
-codex64 kernel booted
+BB kernel booted
 memory=133692416 bytes regions=7
-codex64>
+BB>
 ```
 
 What this proves:
@@ -68,7 +68,7 @@ meminfo
 Observed results included:
 
 - Command list printed correctly
-- Kernel identity printed as `codex64 0.3 x86_64 monolithic research kernel`
+- Kernel identity printed as `BB 0.3 x86_64 monolithic research kernel`
 - PIT uptime tick counter was nonzero
 - Filesystem reported online with version 2
 - Memory information reported total, used, free, page faults, region count, and allocation window

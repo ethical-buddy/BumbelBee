@@ -18,8 +18,8 @@ void pic_init(void) {
     io_wait();
     outb(0xa1, 0x01);
     io_wait();
-    outb(0x21, 0xfc);
-    outb(0xa1, 0xff);
+    outb(0x21, 0xf8);
+    outb(0xa1, 0xef);
 }
 
 void pic_eoi(u8 irq) {

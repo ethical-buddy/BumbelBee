@@ -23,6 +23,15 @@ static void emit_unsigned(fmt_emit_fn emit, void *ctx, u64 value, u32 base) {
     }
 }
 
+static void emit_signed(fmt_emit_fn emit, void *ctx, s64 value) {
+    if (value < 0) {
+        emit('-', ctx);
+        emit_unsigned(emit, ctx, (u64)(-value), 10);
+        return;
+    }
+    emit_unsigned(emit, ctx, (u64)value, 10);
+}
+
 void fmt_vprintf(fmt_emit_fn emit, void *ctx, const char *fmt, __builtin_va_list ap) {
     for (; *fmt; ++fmt) {
         if (*fmt != '%') {
@@ -40,6 +49,9 @@ void fmt_vprintf(fmt_emit_fn emit, void *ctx, const char *fmt, __builtin_va_list
         case 'u':
             emit_unsigned(emit, ctx, __builtin_va_arg(ap, u32), 10);
             break;
+        case 'd':
+            emit_signed(emit, ctx, __builtin_va_arg(ap, s32));
+            break;
         case 'x':
             emit_unsigned(emit, ctx, __builtin_va_arg(ap, u32), 16);
             break;
@@ -47,6 +59,8 @@ void fmt_vprintf(fmt_emit_fn emit, void *ctx, const char *fmt, __builtin_va_list
             ++fmt;
             if (*fmt == 'u') {
                 emit_unsigned(emit, ctx, __builtin_va_arg(ap, u64), 10);
+            } else if (*fmt == 'd') {
+                emit_signed(emit, ctx, __builtin_va_arg(ap, s64));
             } else if (*fmt == 'x') {
                 emit_unsigned(emit, ctx, __builtin_va_arg(ap, u64), 16);
             }

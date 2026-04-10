@@ -1,8 +1,8 @@
-# codex64 User And Research Guide
+# BB User And Research Guide
 
 ## Overview
 
-`codex64` is a compact 64-bit hobby operating system and replay-oriented research platform. It boots through a BIOS pipeline, enters x86_64 long mode, runs a monolithic kernel, exposes a shell, records nondeterministic execution events, and stores trace sessions on disk for later inspection and replay validation.
+`BB` is a compact 64-bit hobby operating system and replay-oriented research platform. It boots through a BIOS pipeline, enters x86_64 long mode, runs a monolithic kernel, exposes a shell, records nondeterministic execution events, and stores trace sessions on disk for later inspection and replay validation.
 
 It is built for two parallel goals:
 
@@ -15,7 +15,7 @@ The system is designed to answer a practical research question:
 
 How much kernel-visible nondeterminism must be captured in order to reproduce a system execution later with high fidelity?
 
-Instead of treating the OS only as an environment for programs, `codex64` treats the OS itself as an observation point. Interrupts, scheduling choices, input events, and fault behavior can be recorded and examined later.
+Instead of treating the OS only as an environment for programs, `BB` treats the OS itself as an observation point. Interrupts, scheduling choices, input events, and fault behavior can be recorded and examined later.
 
 ## Main Benefits
 
@@ -50,7 +50,8 @@ The kernel is monolithic. Core services run in one address space. Tasks are ligh
 - PS/2 keyboard interrupts
 - ATA PIO disk access
 
-The PS/2 keyboard path now tracks shift modifiers, so shifted symbols such as `_` are accepted through keyboard input. The shell also handles backspace/delete correctly for interactive editing.
+The PS/2 keyboard path now tracks shift modifiers, so shifted symbols such as `_` are accepted through keyboard input. The shell also handles backspace/delete correctly for interactive editing. A virtual packet filesystem under `/net` exposes packet transmit/receive as file operations.
+The console now keeps scrollback history. Use `PageUp` and `PageDown` to move through older output, `Home` to jump to the oldest visible history, and `End` to return to the live prompt. A basic PS/2 mouse path is also initialized in QEMU and exposed through `mouse status`.
 
 ## Replay And Tracing Model
 
@@ -138,15 +139,80 @@ Tasks are spawned by kernel subsystems such as `attack_sim`, `sysload`, and `lif
 
 ### `help`
 
-Prints the available shell commands.
+Prints the available shell commands as a comma-separated list.
+
+### `man <topic>`
+
+Prints a built-in manual page for the chosen topic. Start with `man commands` or `man ping`.
 
 ### `ls`
 
 Lists the root layout and the persistent `/trace` sessions known to the filesystem.
+`ls /net`, `ls /net/rx`, and `ls /net/config` inspect the virtual network filesystem tree.
+
+### `cat <path>`
+
+Reads a virtual path. Network paths currently include `/net/stats`, `/net/rx/last`, `/net/rx/queue`, `/net/config/loopback`, and `/net/explain`.
+
+### `write <path> <data>`
+
+Writes to a virtual path. Network paths currently include `/net/tx`, `/net/rx/inject`, and `/net/config/loopback`.
+
+### `open <path> <r|w|rw>`
+
+Opens a VFS path and returns a file descriptor.
+
+### `readfd <fd>`
+
+Reads from an open file descriptor.
+
+### `writefd <fd> <data>`
+
+Writes to an open file descriptor.
+
+### `close <fd>`
+
+Closes an open file descriptor.
+
+### `fork`
+
+Creates a child kernel task through the syscall ABI.
+
+### `execve <path> [arg]`
+
+Executes a program path through the syscall ABI. `/bin` entries are now file-backed, but the spawned-task `execve` path is still not a full POSIX executable loader. The stable shell-facing program paths are `run /bin/ping`, `run /bin/ps`, `run /bin/netstat`, and `run /bin/ring3demo`.
+
+### `waitpid <pid>`
+
+Waits for a task to reach zombie state.
+
+### `ping <target> [count]`
+
+Sends ICMP-like loopback probes over `/net/tx` and prints reply/loss summary. This path is implemented directly in the shell so it stays usable even while the deeper spawned-task exec path is still being refined.
+
+### `run /bin/ring3demo`
+
+Loads a disk-backed ELF image from `/bin/ring3demo`, maps it into an isolated user address-space window, enters ring3, services `int 0x80`, and returns to the shell cleanly.
+
+### `mouse status`
+
+Prints whether PS/2 mouse support is active, the current tracked coordinates, button state, and packet count.
+
+### `net send <payload>`
+
+Convenience wrapper for `write /net/tx <payload>`.
+
+### `net inject <payload>`
+
+Convenience wrapper for `write /net/rx/inject <payload>`.
+
+### `net loopback <0|1>`
+
+Enables or disables loopback packet reflection by writing `/net/config/loopback`.
 
 ### `gui on`
 
-Enables the colored VGA terminal-style shell chrome.
+Enables the colored VGA terminal-style shell chrome with live counters for time, memory, tasks, trace state, network state, scroll position, and mouse state.
 
 ### `gui off`
 
@@ -156,9 +222,17 @@ Returns the console to plain VGA text mode.
 
 Prints a compact live kernel state snapshot including uptime ticks, current PID, replay status, and workload activity.
 
+### `posix status`
+
+Prints the current POSIX-compatibility status, including what Unix-like shell and namespace behavior is already implemented and what remains.
+
+### `perf`
+
+Prints a compact x86 performance matrix including timer, scheduler, trace, memory, filesystem, and network packet counters.
+
 ### `explain <topic>`
 
-Prints a built-in explanation of a subsystem. Supported topics currently include `kernel`, `scheduler`, `trace`, `fs`, `replay`, `proc`, and `smp`.
+Prints a built-in explanation of a subsystem. Supported topics currently include `kernel`, `scheduler`, `trace`, `fs`, `replay`, `proc`, `smp`, `net`, and `posix`.
 
 ### `smpinfo`
 
@@ -269,6 +343,6 @@ The system is functional but intentionally narrow:
 
 ## Practical Meaning
 
-In practical terms, `codex64` is a small operating system that behaves like a controlled experimental machine. You can boot it, interact with it, create trace sessions, run workloads, inspect task activity, store sessions to disk, reboot, and verify that the recorded sessions still exist and still match their original execution signatures.
+In practical terms, `BB` is a small operating system that behaves like a controlled experimental machine. You can boot it, interact with it, create trace sessions, run workloads, inspect task activity, store sessions to disk, reboot, and verify that the recorded sessions still exist and still match their original execution signatures.
 
 It is also now self-explanatory in a limited but useful sense: from inside the shell you can ask the kernel to explain its scheduler, replay subsystem, filesystem, process model, and overall architecture while you watch those subsystems operate.

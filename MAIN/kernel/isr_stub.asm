@@ -111,6 +111,7 @@ ISR_NOERR 44
 ISR_NOERR 45
 ISR_NOERR 46
 ISR_NOERR 47
+ISR_NOERR 128
 
 section .rodata
 global isr_stub_table

@@ -42,6 +42,16 @@ void *page_alloc(void) {
     return page;
 }
 
+u64 memory_read_cr3(void) {
+    u64 value;
+    __asm__ volatile("mov %%cr3, %0" : "=r"(value));
+    return value;
+}
+
+void memory_write_cr3(u64 value) {
+    __asm__ volatile("mov %0, %%cr3" : : "r"(value) : "memory");
+}
+
 u64 memory_total_bytes(void) {
     return total_bytes;
 }

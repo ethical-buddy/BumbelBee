@@ -31,6 +31,7 @@ KERNEL_C_SRCS := \
 	$(KERNEL_DIR)/pit.c \
 	$(KERNEL_DIR)/keyboard.c \
 	$(KERNEL_DIR)/mouse.c \
+	$(KERNEL_DIR)/power.c \
 	$(KERNEL_DIR)/cpuid.c \
 	$(KERNEL_DIR)/apic.c \
 	$(KERNEL_DIR)/smp.c \

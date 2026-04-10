@@ -1,5 +1,6 @@
 #include "console.h"
 #include "keyboard.h"
+#include "power.h"
 
 #include "trace.h"
 
@@ -93,8 +94,8 @@ void keyboard_handle_scancode(int scancode) {
     if (!ch) {
         return;
     }
-    keyboard_buffer_put(ch);
-    trace_record(TRACE_EVENT_KEYBOARD, 0, (u64)(u8)ch, (u64)scancode);
+    keyboard_trace_char(ch, scancode);
+    power_keyboard_char(ch);
 }
 
 int keyboard_getchar(void) {
@@ -107,4 +108,8 @@ int keyboard_getchar(void) {
 
 void keyboard_buffer_put(char ch) {
     buffer[head++ % sizeof(buffer)] = ch;
+}
+
+void keyboard_trace_char(char ch, int scancode) {
+    trace_record(TRACE_EVENT_KEYBOARD, 0, (u64)(u8)ch, (u64)scancode);
 }

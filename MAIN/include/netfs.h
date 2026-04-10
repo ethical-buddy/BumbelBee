@@ -28,5 +28,7 @@ int netfs_write_path(const char *path, const char *data);
 int netfs_render_path(const char *path, char *buf, u32 cap, u32 *written);
 int netfs_peek_last_rx(struct netfs_packet_info *pkt);
 void netfs_get_stats(struct netfs_stats *stats);
+void netfs_power_tick(void);
+void netfs_flush_tx(void);
 
 #endif

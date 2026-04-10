@@ -10,7 +10,8 @@ enum trace_event_type {
     TRACE_EVENT_SHELL = 4,
     TRACE_EVENT_PAGE_FAULT = 5,
     TRACE_EVENT_WORKLOAD = 6,
-    TRACE_EVENT_NET = 7
+    TRACE_EVENT_NET = 7,
+    TRACE_EVENT_POWER = 8
 };
 
 struct trace_event {

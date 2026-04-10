@@ -13,6 +13,7 @@ Current status:
 - The GUI text mode now renders a live dashboard with uptime, memory, task, trace, and network counters in the chrome around the shell workspace.
 - The shell now has built-in `man` pages, comma-separated command discovery via `help`, and PageUp/PageDown scrollback.
 - A basic PS/2 mouse path now tracks mouse packets and exposes the state through `mouse status` and the GUI header.
+- A power-aware event coalescing subsystem adapted from `RESEARCH-OS` now batches keyboard delivery and `/net` transmit flushes to reduce CPU wakeups on balanced and saver profiles.
 - Address spaces now include a real user-mapped window with distinct CR3 roots for isolated executable contexts.
 - `/bin` now exposes file-backed executable images, including a disk-backed `/bin/ring3demo` ELF loaded through the filesystem.
 - Runtime GDT/TSS setup and a DPL3 syscall gate on `int 0x80` are present, and `run /bin/ring3demo` now exercises a stable isolated ring3 transition and return path.
@@ -41,6 +42,7 @@ Useful documents:
 - [Presentation Notes](/home/suryansh/Projects/OS/codex/docs/PRESENTATION_NOTES.md)
 - [Command Manual](/home/suryansh/Projects/OS/codex/docs/COMMAND_MANUAL.md)
 - [File Map](/home/suryansh/Projects/OS/codex/docs/FILE_MAP.md)
+- [USP And Use Cases](/home/suryansh/Projects/OS/codex/docs/USP_USE_CASES.md)
 - [Next Milestones](/home/suryansh/Projects/OS/codex/docs/NEXT_MILESTONES.md)
 - [Validation Report](/home/suryansh/Projects/OS/codex/docs/VALIDATION_REPORT.md)
 - [Deterministic Replay Roadmap](/home/suryansh/Projects/OS/codex/docs/DETERMINISTIC_REPLAY_ROADMAP.md)

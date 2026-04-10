@@ -8,11 +8,56 @@ struct manual_page {
 };
 
 static const char *all_commands =
-    "help, man, ls, cat, write, open, readfd, writefd, close, fork, execve, run, waitpid, "
-    "ping, ps, netstat, mouse status, net send, net inject, net loopback, clear, gui on, gui off, "
-    "uname, uptime, fsinfo, state, smpinfo, explain, posix status, perf, demo record, demo replay, "
-    "trace start, trace stop, trace list, trace stats, traceview, replay session, meminfo, irqstat, "
-    "attack_sim, sysload, lifecycle_test, proc";
+    "help\n"
+    "man\n"
+    "ls\n"
+    "cat\n"
+    "write\n"
+    "open\n"
+    "readfd\n"
+    "writefd\n"
+    "close\n"
+    "fork\n"
+    "execve\n"
+    "run\n"
+    "waitpid\n"
+    "ping\n"
+    "ps\n"
+    "netstat\n"
+    "mouse status\n"
+    "power status\n"
+    "power perf\n"
+    "power balanced\n"
+    "power saver\n"
+    "sim\n"
+    "net send\n"
+    "net inject\n"
+    "net loopback\n"
+    "clear\n"
+    "gui on\n"
+    "gui off\n"
+    "uname\n"
+    "uptime\n"
+    "fsinfo\n"
+    "state\n"
+    "smpinfo\n"
+    "explain\n"
+    "posix status\n"
+    "perf\n"
+    "demo record\n"
+    "demo replay\n"
+    "trace start\n"
+    "trace stop\n"
+    "trace list\n"
+    "trace stats\n"
+    "traceview\n"
+    "replay session\n"
+    "meminfo\n"
+    "irqstat\n"
+    "attack_sim\n"
+    "sysload\n"
+    "lifecycle_test\n"
+    "proc\n";
 
 static const struct manual_page pages[] = {
     {"help",
@@ -21,22 +66,67 @@ static const struct manual_page pages[] = {
      "USAGE\n"
      "  help\n\n"
      "DESCRIPTION\n"
-     "  Prints all commands as a comma-separated list. Use 'man <command>' for a full manual page.\n"},
+     "  Prints all commands one per line. Use 'man <command>' for a full manual page.\n"},
     {"man",
      "NAME\n"
      "  man - print a built-in manual page\n\n"
      "USAGE\n"
-     "  man <topic>\n\n"
+      "  man <topic>\n\n"
      "TOPICS\n"
      "  commands, help, ls, cat, write, open, readfd, writefd, close, fork, execve, run, waitpid,\n"
-     "  ping, ps, netstat, mouse, gui, trace, demo, proc, posix, perf\n"},
+     "  ping, ps, netstat, mouse, power, sim, gui, trace, demo, proc, posix, perf\n"},
     {"commands",
      "COMMANDS\n"
-     "  help, man, ls, cat, write, open, readfd, writefd, close, fork, execve, run, waitpid,\n"
-     "  ping, ps, netstat, mouse status, net send, net inject, net loopback, clear, gui on,\n"
-     "  gui off, uname, uptime, fsinfo, state, smpinfo, explain, posix status, perf,\n"
-     "  demo record, demo replay, trace start, trace stop, trace list, trace stats, traceview,\n"
-     "  replay session, meminfo, irqstat, attack_sim, sysload, lifecycle_test, proc\n"},
+     "  help\n"
+     "  man\n"
+     "  ls\n"
+     "  cat\n"
+     "  write\n"
+     "  open\n"
+     "  readfd\n"
+     "  writefd\n"
+     "  close\n"
+     "  fork\n"
+     "  execve\n"
+     "  run\n"
+     "  waitpid\n"
+     "  ping\n"
+     "  ps\n"
+     "  netstat\n"
+     "  mouse status\n"
+     "  power status\n"
+     "  power perf\n"
+     "  power balanced\n"
+     "  power saver\n"
+     "  sim\n"
+     "  net send\n"
+     "  net inject\n"
+     "  net loopback\n"
+     "  clear\n"
+     "  gui on\n"
+     "  gui off\n"
+     "  uname\n"
+     "  uptime\n"
+     "  fsinfo\n"
+     "  state\n"
+     "  smpinfo\n"
+     "  explain\n"
+     "  posix status\n"
+     "  perf\n"
+     "  demo record\n"
+     "  demo replay\n"
+     "  trace start\n"
+     "  trace stop\n"
+     "  trace list\n"
+     "  trace stats\n"
+     "  traceview\n"
+     "  replay session\n"
+     "  meminfo\n"
+     "  irqstat\n"
+     "  attack_sim\n"
+     "  sysload\n"
+     "  lifecycle_test\n"
+     "  proc\n"},
     {"ls",
      "NAME\n"
      "  ls - list kernel namespaces and virtual directories\n\n"
@@ -70,15 +160,39 @@ static const struct manual_page pages[] = {
      "  those interfaces as writable files.\n"},
     {"open",
      "NAME\n"
-     "  open, readfd, writefd, close - file descriptor workflow\n\n"
+     "  open - open a VFS path and return a file descriptor\n\n"
      "USAGE\n"
-     "  open <path> <r|w|rw>\n"
-     "  readfd <fd>\n"
-     "  writefd <fd> <data>\n"
-     "  close <fd>\n\n"
+      "  open <path> <r|w|rw>\n"
+     "  open /net/stats r\n\n"
      "DESCRIPTION\n"
-     "  Demonstrates a POSIX-like descriptor API over the kernel VFS. This is the lowest-level user-visible\n"
-     "  file interface in the shell.\n"},
+     "  Opens a VFS path through the descriptor layer. Use 'man readfd', 'man writefd', and\n"
+     "  'man close' for the rest of the descriptor workflow.\n"},
+    {"readfd",
+     "NAME\n"
+     "  readfd - read data from an open file descriptor\n\n"
+     "USAGE\n"
+      "  readfd <fd>\n"
+     "  readfd 0\n\n"
+     "DESCRIPTION\n"
+     "  Reads bytes from an open descriptor. Works with VFS-backed namespaces such as /net, /proc,\n"
+     "  /trace, and /bin.\n"},
+    {"writefd",
+     "NAME\n"
+     "  writefd - write data to an open file descriptor\n\n"
+     "USAGE\n"
+     "  writefd <fd> <data>\n"
+     "  writefd 0 hello\n\n"
+     "DESCRIPTION\n"
+     "  Writes bytes to an open writable descriptor. Use with paths opened by 'open <path> w' or\n"
+     "  'open <path> rw'.\n"},
+    {"close",
+     "NAME\n"
+     "  close - close an open file descriptor\n\n"
+     "USAGE\n"
+     "  close <fd>\n"
+     "  close 0\n\n"
+     "DESCRIPTION\n"
+     "  Closes a descriptor opened through the VFS layer.\n"},
     {"fork",
      "NAME\n"
      "  fork - spawn a child kernel task\n\n"
@@ -139,6 +253,27 @@ static const struct manual_page pages[] = {
      "DESCRIPTION\n"
      "  Shows whether a PS/2 mouse was initialized, the current cursor coordinates tracked by packet input,\n"
      "  button mask, and the number of packets seen.\n"},
+    {"power",
+     "NAME\n"
+     "  power - inspect or change the CPU wakeup coalescing policy\n\n"
+     "USAGE\n"
+     "  power status\n"
+     "  power perf\n"
+     "  power balanced\n"
+     "  power saver\n\n"
+     "DESCRIPTION\n"
+     "  Ports the RESEARCH-OS wakeup-reduction idea into BB. Keyboard delivery and /net transmit are\n"
+     "  coalesced in balanced and saver modes so the kernel processes fewer wakeups and larger batches.\n"},
+    {"sim",
+     "NAME\n"
+     "  sim - simulate bursty /net transmit traffic and show flush metrics\n\n"
+     "USAGE\n"
+     "  sim\n"
+     "  sim 32\n"
+     "  sim 100\n\n"
+     "DESCRIPTION\n"
+     "  Enqueues a burst of small writes to '/net/tx' using the current power mode, lets the kernel flush\n"
+     "  them naturally, and then prints the updated power and network counters.\n"},
     {"gui",
      "NAME\n"
      "  gui on, gui off - toggle the VGA dashboard shell frame\n\n"
@@ -200,6 +335,19 @@ const char *manual_command_list(void) {
 }
 
 int manual_print(const char *topic, void (*emit)(const char *text)) {
+    if (strcmp(topic, "run") == 0) {
+        topic = "execve";
+    } else if (strcmp(topic, "mouse status") == 0) {
+        topic = "mouse";
+    } else if (strcmp(topic, "power status") == 0 || strcmp(topic, "power perf") == 0 ||
+               strcmp(topic, "power balanced") == 0 || strcmp(topic, "power saver") == 0) {
+        topic = "power";
+    } else if (strcmp(topic, "trace start") == 0 || strcmp(topic, "trace stop") == 0 ||
+               strcmp(topic, "trace list") == 0 || strcmp(topic, "trace stats") == 0) {
+        topic = "trace";
+    } else if (strcmp(topic, "demo record") == 0 || strcmp(topic, "demo replay") == 0) {
+        topic = "demo";
+    }
     if (!topic || !emit) {
         return -1;
     }

@@ -183,6 +183,7 @@ static void ping_task(void *arg) {
         payload[p] = '\0';
         if (netfs_write_path("/net/tx", payload) == 0) {
             sent++;
+            netfs_flush_tx();
         }
         for (u32 t = 0; t < job->interval_ticks; ++t) {
             sched_yield();

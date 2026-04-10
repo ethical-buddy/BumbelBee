@@ -8,6 +8,7 @@
 #include "mouse.h"
 #include "pic.h"
 #include "pit.h"
+#include "power.h"
 #include "sched.h"
 #include "trace.h"
 #include "usermode.h"
@@ -35,6 +36,7 @@ void isr_dispatch(struct interrupt_frame *frame) {
         break;
     case 32:
         pit_handle_tick();
+        power_tick_hook();
         sched_tick();
         pic_eoi(0);
         break;

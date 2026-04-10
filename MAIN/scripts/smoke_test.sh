@@ -14,6 +14,8 @@ set +e
   sleep 1
   printf 'uname\n'
   printf 'help\n'
+  printf 'man readfd\n'
+  printf 'man writefd\n'
   printf 'man ping\n'
   printf 'ls /bin\n'
   printf 'cat /bin/ping\n'
@@ -29,6 +31,8 @@ set +e
   printf 'run /bin/ring3demo\n'
   printf 'netstat\n'
   printf 'ping loopback 1\n'
+  printf 'power status\n'
+  printf 'sim 8\n'
   printf 'trace start\n'
   printf 'net send smoke-packet\n'
   printf 'trace stop\n'
@@ -54,7 +58,12 @@ expect() {
 }
 
 expect "BB kernel booted"
-expect "help, man, ls, cat, write, open"
+expect "commands:"
+expect "readfd"
+expect "writefd"
+expect "sim"
+expect "readfd - read data from an open file descriptor"
+expect "writefd - write data to an open file descriptor"
 expect "NAME"
 expect "ping - send ICMP-like loopback traffic through /net"
 expect "executables:"
@@ -64,6 +73,9 @@ expect "path=/bin/ring3demo"
 expect "pid ppid aspace state"
 expect "id kind refs isolated cr3 ustack label"
 expect "mouse present="
+expect "power mode: balanced"
+expect "cpu wakeups:"
+expect "sim result:"
 expect "tx_packets="
 expect "netstat tx="
 expect "ping summary target=loopback sent=1 recv=1 loss=0%"

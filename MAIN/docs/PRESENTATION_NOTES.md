@@ -12,6 +12,7 @@
 - unified VFS view over `/trace`, `/bin`, `/net`, and `/proc`
 - syscall-style `open`, `read`, `write`, `close`, `fork`, `execve`, `waitpid`
 - file-modeled networking under `/net`
+- power-aware wakeup reduction adapted from `RESEARCH-OS`
 - file-backed executable namespace under `/bin`
 - live GUI dashboard chrome with memory, task, trace, and network counters
 - scrollable shell history with visible read-mode status and Home/End jumps
@@ -29,6 +30,8 @@
 - `open /net/stats r`, `readfd 0`, `close 0`: demonstrate FD-style access
 - `write /net/tx hello`: transmit a packet as a file write
 - `ping loopback 1`: send a loopback ping through the stable shell path
+- `power status`, `power saver`, `power perf`: show the visible wakeup/latency tradeoff
+- `sim 8`: show batched flush behavior in a short, presentation-friendly burst
 - `run /bin/ping loopback 1`: same ping flow presented through the `/bin` namespace
 - `run /bin/ring3demo`: enter ring3 from a file-backed ELF and return
 - `gui on`: show the live dashboard layout

@@ -5,6 +5,7 @@
 #include "mouse.h"
 #include "netfs.h"
 #include "pit.h"
+#include "power.h"
 #include "sched.h"
 #include "string.h"
 #include "trace.h"
@@ -90,6 +91,7 @@ static void move_cursor(void) {
 
 static void refresh_gui_chrome(void) {
     struct netfs_stats net_stats;
+    struct power_stats power_stats;
     struct sched_task_info tasks[8];
     struct mouse_state mouse_state;
     const struct trace_stats *trace_stats = trace_get_stats();
@@ -101,6 +103,7 @@ static void refresh_gui_chrome(void) {
         }
     }
     netfs_get_stats(&net_stats);
+    power_get_stats(&power_stats);
     mouse_get_state(&mouse_state);
 
     for (size_t c = 0; c < SCREEN_W; ++c) {
@@ -129,12 +132,10 @@ static void refresh_gui_chrome(void) {
     write_u64_at(1, 38, net_stats.rx_packets, 0x17);
     write_at(1, 44, "q=", 0x17);
     write_u64_at(1, 46, net_stats.queue_depth, 0x17);
-    write_at(1, 51, "mouse=", 0x17);
-    write_u64_at(1, 57, mouse_state.present, 0x17);
-    write_at(1, 59, "@", 0x17);
-    write_u64_at(1, 60, mouse_state.x, 0x17);
-    write_at(1, 62, ",", 0x17);
-    write_u64_at(1, 63, mouse_state.y, 0x17);
+    write_at(1, 50, "pwr=", 0x17);
+    write_at(1, 54, power_mode_name(), 0x17);
+    write_at(1, 66, "w=", 0x17);
+    write_u64_at(1, 68, power_stats.wakeups, 0x17);
 
     write_at(22, 2, "proc=", 0x17);
     write_u64_at(22, 7, sched_current_pid(), 0x17);
@@ -145,12 +146,17 @@ static void refresh_gui_chrome(void) {
     write_at(22, 34, "free=", 0x17);
     write_u64_at(22, 39, memory_free_bytes() / 1024, 0x17);
     write_at(22, 45, "K", 0x17);
-    write_at(22, 50, viewport_offset ? "scroll=" : "live   ", 0x17);
+    write_at(22, 48, "keys=", 0x17);
+    write_u64_at(22, 53, power_stats.pending_keys, 0x17);
+    write_at(22, 57, "txq=", 0x17);
+    write_u64_at(22, 61, power_stats.pending_tx_packets, 0x17);
+    write_at(22, 65, "m=", 0x17);
+    write_at(22, 67, mouse_state.present ? "on" : "off", 0x17);
     if (viewport_offset) {
-        write_u64_at(22, 57, viewport_offset, 0x17);
-        write_at(22, 62, "/", 0x17);
-        write_u64_at(22, 63, max_viewport_offset(), 0x17);
-        write_at(22, 69, "READ", 0x17);
+        write_at(24, 60, "READ ", 0x10);
+        write_u64_at(24, 65, viewport_offset, 0x10);
+        write_at(24, 70, "/", 0x10);
+        write_u64_at(24, 71, max_viewport_offset(), 0x10);
     }
 
     write_at(24, 2, "PgUp/PgDn scroll  Home/End jump  help, man, ping, ps, netstat", 0x10);

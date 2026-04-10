@@ -79,6 +79,10 @@ This document explains what the main source files do and why they exist.
   PS/2 mouse packet tracking used by the dashboard and `mouse status`.
 - `include/mouse.h`
   Mouse interface.
+- `kernel/power.c`
+  Power-aware wakeup reduction logic. Coalesces keyboard input delivery and batches `/net` transmit flushes according to performance, balanced, and saver modes.
+- `include/power.h`
+  Public power-mode and power-stat interfaces used by the shell, dashboard, timer path, and NetFS.
 - `kernel/serial.c`
   COM1 serial output/input used for headless QEMU runs and logging.
 - `include/serial.h`

@@ -2,6 +2,7 @@
 
 #include "console.h"
 #include "pit.h"
+#include "power.h"
 #include "serial.h"
 #include "string.h"
 #include "trace.h"
@@ -21,8 +22,12 @@ struct net_packet {
 };
 
 static struct net_packet rx_queue[NETFS_QUEUE_CAP];
+static struct net_packet tx_queue[NETFS_QUEUE_CAP];
 static u32 rx_head;
 static u32 rx_count;
+static u32 tx_head;
+static u32 tx_count;
+static u32 tx_pending_bytes;
 static u64 next_packet_id;
 static struct netfs_stats stats;
 
@@ -93,11 +98,68 @@ static void enqueue_rx_packet(const u8 *data, u32 len) {
     trace_record(TRACE_EVENT_NET, 0, NET_EVENT_RX, pkt->packet_id);
 }
 
+static void transmit_now(const u8 *data, u32 len) {
+    stats.tx_packets++;
+    stats.tx_bytes += len;
+    trace_record(TRACE_EVENT_NET, 0, NET_EVENT_TX, len);
+    if (stats.loopback_enabled) {
+        enqueue_rx_packet(data, len);
+    }
+}
+
+static int enqueue_tx_packet(const u8 *data, u32 len) {
+    u32 slot;
+    struct net_packet *pkt;
+    if (len > NETFS_MAX_PAYLOAD) {
+        len = NETFS_MAX_PAYLOAD;
+    }
+    if (tx_count == NETFS_QUEUE_CAP) {
+        return -1;
+    }
+    slot = (tx_head + tx_count) % NETFS_QUEUE_CAP;
+    pkt = &tx_queue[slot];
+    pkt->packet_id = next_packet_id++;
+    pkt->ticks = pit_ticks();
+    pkt->len = len;
+    if (len) {
+        memcpy(pkt->data, data, len);
+    }
+    tx_count++;
+    tx_pending_bytes += len;
+    power_note_net_enqueued(len);
+    power_set_pending_net(tx_count, tx_pending_bytes);
+    return 0;
+}
+
+static void flush_tx_queue(void) {
+    u32 flushed_packets = 0;
+    u32 flushed_bytes = 0;
+    while (tx_count) {
+        struct net_packet *pkt = &tx_queue[tx_head];
+        transmit_now(pkt->data, pkt->len);
+        flushed_packets++;
+        flushed_bytes += pkt->len;
+        tx_head = (tx_head + 1) % NETFS_QUEUE_CAP;
+        tx_count--;
+    }
+    tx_pending_bytes = 0;
+    power_set_pending_net(tx_count, tx_pending_bytes);
+    power_note_net_flushed(flushed_packets, flushed_bytes);
+}
+
+void netfs_flush_tx(void) {
+    flush_tx_queue();
+}
+
 void netfs_init(void) {
     memset(rx_queue, 0, sizeof(rx_queue));
+    memset(tx_queue, 0, sizeof(tx_queue));
     memset(&stats, 0, sizeof(stats));
     rx_head = 0;
     rx_count = 0;
+    tx_head = 0;
+    tx_count = 0;
+    tx_pending_bytes = 0;
     next_packet_id = 1;
     stats.loopback_enabled = 1;
 }
@@ -163,11 +225,18 @@ int netfs_write_path(const char *path, const char *data) {
         return 0;
     }
     if (path_eq(path, "/net/tx")) {
-        stats.tx_packets++;
-        stats.tx_bytes += len;
-        trace_record(TRACE_EVENT_NET, 0, NET_EVENT_TX, len);
-        if (stats.loopback_enabled) {
-            enqueue_rx_packet((const u8 *)data, (u32)len);
+        if (power_get_mode() == POWER_MODE_PERFORMANCE) {
+            transmit_now((const u8 *)data, (u32)len);
+        } else {
+            if (enqueue_tx_packet((const u8 *)data, (u32)len) != 0) {
+                flush_tx_queue();
+                if (enqueue_tx_packet((const u8 *)data, (u32)len) != 0) {
+                    return -1;
+                }
+            }
+            if (tx_count >= power_net_batch_limit()) {
+                flush_tx_queue();
+            }
         }
         return 0;
     }
@@ -201,6 +270,8 @@ int netfs_render_path(const char *path, char *buf, u32 cap, u32 *written) {
         pos = append_u64_dec(buf, cap, pos, stats.dropped_packets);
         pos = append_str(buf, cap, pos, " queue_depth=");
         pos = append_u64_dec(buf, cap, pos, rx_count);
+        pos = append_str(buf, cap, pos, " tx_pending=");
+        pos = append_u64_dec(buf, cap, pos, tx_count);
         pos = append_str(buf, cap, pos, " loopback=");
         pos = append_u64_dec(buf, cap, pos, stats.loopback_enabled);
         pos = append_str(buf, cap, pos, " last_packet=");
@@ -269,4 +340,10 @@ int netfs_peek_last_rx(struct netfs_packet_info *pkt) {
     pkt->len = rx_queue[idx].len;
     memcpy(pkt->data, rx_queue[idx].data, rx_queue[idx].len);
     return 0;
+}
+
+void netfs_power_tick(void) {
+    if (power_get_mode() != POWER_MODE_PERFORMANCE && tx_count) {
+        flush_tx_queue();
+    }
 }

@@ -19,6 +19,7 @@
 #include "vfs.h"
 #include "workload.h"
 #include "pit.h"
+#include "power.h"
 
 #define KERNEL_NAME "BB"
 #define KERNEL_VERSION "0.3"
@@ -30,6 +31,8 @@ static void shell_putc(char c);
 static void shell_ping_run(const char *args);
 static void shell_ps_run(void);
 static void shell_netstat_run(void);
+static void shell_power_status(void);
+static void shell_sim_run(const char *args);
 
 static u32 parse_u32(const char *s) {
     u32 value = 0;
@@ -104,6 +107,91 @@ static void shell_netstat_run(void) {
                   stats.dropped_packets, stats.queue_depth, stats.loopback_enabled, stats.last_packet_id);
 }
 
+static void shell_power_status(void) {
+    struct power_stats stats;
+    power_get_stats(&stats);
+    u64 saved = 0;
+    u64 total = stats.keyboard_events + stats.net_tx_enqueued;
+    if (total && total >= stats.wakeups) {
+        saved = ((total - stats.wakeups) * 100) / total;
+    }
+    console_printf("power mode: %s\n", power_mode_name());
+    console_printf("cpu wakeups: %lu\n", stats.wakeups);
+    console_printf("keyboard events: %lu\n", stats.keyboard_events);
+    console_printf("keyboard coalesced: %lu\n", stats.keyboard_coalesced);
+    console_printf("keyboard flushes: %lu\n", stats.keyboard_flushes);
+    console_printf("net writes enqueued: %lu\n", stats.net_tx_enqueued);
+    console_printf("net flushes: %lu\n", stats.net_flushes);
+    console_printf("net writes flushed: %lu\n", stats.net_tx_flushed);
+    console_printf("pending keys: %u\n", stats.pending_keys);
+    console_printf("pending tx packets: %u\n", stats.pending_tx_packets);
+    console_printf("pending tx bytes: %u\n", stats.pending_tx_bytes);
+    console_printf("mode switches: %lu\n", stats.mode_switches);
+    console_printf("wakeups saved: %lu%%\n", saved);
+    serial_printf("power mode: %s\n", power_mode_name());
+    serial_printf("cpu wakeups: %lu\n", stats.wakeups);
+    serial_printf("keyboard events: %lu\n", stats.keyboard_events);
+    serial_printf("keyboard coalesced: %lu\n", stats.keyboard_coalesced);
+    serial_printf("keyboard flushes: %lu\n", stats.keyboard_flushes);
+    serial_printf("net writes enqueued: %lu\n", stats.net_tx_enqueued);
+    serial_printf("net flushes: %lu\n", stats.net_flushes);
+    serial_printf("net writes flushed: %lu\n", stats.net_tx_flushed);
+    serial_printf("pending keys: %u\n", stats.pending_keys);
+    serial_printf("pending tx packets: %u\n", stats.pending_tx_packets);
+    serial_printf("pending tx bytes: %u\n", stats.pending_tx_bytes);
+    serial_printf("mode switches: %lu\n", stats.mode_switches);
+    serial_printf("wakeups saved: %lu%%\n", saved);
+}
+
+static void shell_sim_run(const char *args) {
+    u32 count = 100;
+    char payload[32];
+    struct netfs_stats before;
+    struct netfs_stats after;
+    if (args && *skip_spaces(args)) {
+        u32 parsed = parse_u32(skip_spaces(args));
+        if (parsed > 0 && parsed <= 256) {
+            count = parsed;
+        }
+    }
+    netfs_get_stats(&before);
+    console_printf("sim: mode=%s writes=%u\n", power_mode_name(), count);
+    serial_printf("sim: mode=%s writes=%u\n", power_mode_name(), count);
+    for (u32 i = 0; i < count; ++i) {
+        u32 pos = 0;
+        memcpy(payload, "sim-", 4);
+        pos = 4;
+        if (i >= 100) {
+            payload[pos++] = (char)('0' + ((i / 100) % 10));
+        }
+        if (i >= 10) {
+            payload[pos++] = (char)('0' + ((i / 10) % 10));
+        }
+        payload[pos++] = (char)('0' + (i % 10));
+        payload[pos] = '\0';
+        if (netfs_write_path("/net/tx", payload) != 0) {
+            console_printf("sim: write failed at i=%u\n", i);
+            serial_printf("sim: write failed at i=%u\n", i);
+            break;
+        }
+    }
+    for (u32 wait = 0; wait < 32; ++wait) {
+        sched_yield();
+    }
+    netfs_get_stats(&after);
+    console_printf("sim result:\n");
+    console_printf("  tx packets delta: %lu\n", after.tx_packets - before.tx_packets);
+    console_printf("  tx bytes delta: %lu\n", after.tx_bytes - before.tx_bytes);
+    console_printf("  rx packets delta: %lu\n", after.rx_packets - before.rx_packets);
+    console_printf("  queue depth now: %u\n", after.queue_depth);
+    serial_printf("sim result:\n");
+    serial_printf("  tx packets delta: %lu\n", after.tx_packets - before.tx_packets);
+    serial_printf("  tx bytes delta: %lu\n", after.tx_bytes - before.tx_bytes);
+    serial_printf("  rx packets delta: %lu\n", after.rx_packets - before.rx_packets);
+    serial_printf("  queue depth now: %u\n", after.queue_depth);
+    shell_power_status();
+}
+
 static void shell_ps_run(void) {
     sched_dump();
 }
@@ -161,6 +249,7 @@ static void shell_ping_run(const char *args) {
         payload[p] = '\0';
         if (netfs_write_path("/net/tx", payload) == 0) {
             sent++;
+            netfs_flush_tx();
         }
         for (u32 wait = 0; wait < 5; ++wait) {
             sched_yield();
@@ -200,8 +289,10 @@ static void explain_topic(const char *topic) {
         shell_write("net: netfs exposes packet i/o via files under /net so transmit, receive, and network control are operated with read/write path semantics\n");
     } else if (strcmp(topic, "posix") == 0) {
         shell_write("posix: shell supports path-based ls/cat/write commands and unix-like introspection commands while full userspace/syscall compatibility remains future work\n");
+    } else if (strcmp(topic, "power") == 0) {
+        shell_write("power: coalesces keyboard delivery and /net transmit batching to reduce CPU wakeups in balanced and saver modes\n");
     } else {
-        shell_write("topics: kernel scheduler trace fs replay proc smp net posix\n");
+        shell_write("topics: kernel scheduler trace fs replay proc smp net posix power\n");
     }
 }
 
@@ -251,11 +342,12 @@ static void exec_command(const char *cmd) {
     struct smp_cpu_info cpu_info[SMP_MAX_CPUS];
     struct sched_task_info task_info[8];
     if (strcmp(cmd, "help") == 0) {
+        shell_write("commands:\n");
         shell_write(manual_command_list());
-        shell_write("\nuse: man <command>\n");
+        shell_write("use: man <command>\n");
     } else if (strcmp(cmd, "man") == 0) {
         shell_write("usage: man <topic>\n");
-        shell_write("topics: commands, help, ls, cat, write, open, fork, execve, waitpid, ping, ps, netstat, mouse, gui, trace, demo, proc, posix, perf\n");
+        shell_write("topics: commands, help, ls, cat, write, open, readfd, writefd, close, fork, execve, run, waitpid, ping, ps, netstat, mouse, power, sim, gui, trace, demo, proc, posix, perf\n");
     } else if (strncmp(cmd, "man ", 4) == 0) {
         const char *topic = skip_spaces(cmd + 4);
         if (manual_print(topic, shell_emit_manual) != 0) {
@@ -450,6 +542,21 @@ static void exec_command(const char *cmd) {
                        ms.present, (long)ms.x, (long)ms.y, ms.buttons, ms.packets);
         serial_printf("mouse present=%u x=%ld y=%ld buttons=%u packets=%lu\n",
                       ms.present, (long)ms.x, (long)ms.y, ms.buttons, ms.packets);
+    } else if (strcmp(cmd, "power status") == 0 || strcmp(cmd, "power stats") == 0) {
+        shell_power_status();
+    } else if (strcmp(cmd, "power perf") == 0) {
+        power_set_mode(POWER_MODE_PERFORMANCE);
+        shell_power_status();
+    } else if (strcmp(cmd, "power balanced") == 0) {
+        power_set_mode(POWER_MODE_BALANCED);
+        shell_power_status();
+    } else if (strcmp(cmd, "power saver") == 0) {
+        power_set_mode(POWER_MODE_ENERGY_SAVER);
+        shell_power_status();
+    } else if (strcmp(cmd, "sim") == 0) {
+        shell_sim_run("");
+    } else if (strncmp(cmd, "sim ", 4) == 0) {
+        shell_sim_run(skip_spaces(cmd + 4));
     } else if (strncmp(cmd, "net send ", 9) == 0) {
         const char *payload = skip_spaces(cmd + 9);
         if (netfs_write_path("/net/tx", payload) != 0) {
@@ -498,7 +605,7 @@ static void exec_command(const char *cmd) {
         shell_write("  vfs namespaces: /trace /bin /net /proc exposed through fd-backed reads/writes\n");
         shell_write("  protected exec: runtime gdt/tss, dpl3 int 0x80 gate, and stable run /bin/ring3demo transition/return path\n");
         shell_write("  executable model: file-backed /bin images with disk-backed elf loading for /bin/ring3demo\n");
-        shell_write("  unix-like commands: ls cat write open readfd writefd close proc ping ps netstat man mouse status\n");
+        shell_write("  unix-like commands: ls cat write open readfd writefd close proc ping ps netstat man mouse status power status\n");
         shell_write("  missing for full posix: spawned process execution, full per-process vm, signals, fork/exec semantics, permissions\n");
     } else if (strcmp(cmd, "perf") == 0) {
         u32 task_count = sched_snapshot(task_info, 8);

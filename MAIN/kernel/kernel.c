@@ -9,6 +9,7 @@
 #include "memory.h"
 #include "mouse.h"
 #include "netfs.h"
+#include "power.h"
 #include "sched.h"
 #include "shell.h"
 #include "smp.h"
@@ -36,6 +37,7 @@ void kernel_main(struct boot_info *boot_info) {
     gdt_init();
     keyboard_init();
     mouse_init();
+    power_init();
     smp_init();
     sched_init();
     trace_init();

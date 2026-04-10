@@ -53,6 +53,26 @@ The kernel is monolithic. Core services run in one address space. Tasks are ligh
 The PS/2 keyboard path now tracks shift modifiers, so shifted symbols such as `_` are accepted through keyboard input. The shell also handles backspace/delete correctly for interactive editing. A virtual packet filesystem under `/net` exposes packet transmit/receive as file operations.
 The console now keeps scrollback history. Use `PageUp` and `PageDown` to move through older output, `Home` to jump to the oldest visible history, and `End` to return to the live prompt. A basic PS/2 mouse path is also initialized in QEMU and exposed through `mouse status`.
 
+### Power-aware CPU wakeup reduction
+
+`BB` now includes a small power manager adapted from the separate `RESEARCH-OS` prototype. The original design there is best described as CPU wakeup reduction through interrupt coalescing and delayed low-priority work, not as a memory-saving algorithm.
+
+In `BB`, that idea was advanced into two visible kernel policies:
+
+- keyboard input can be delivered immediately or coalesced for a short interval
+- `/net/tx` packet writes can be transmitted immediately or flushed in small batches
+
+The exposed modes are:
+
+- `power perf`
+  minimize latency and flush immediately
+- `power balanced`
+  reduce some wakeups with little interactivity loss
+- `power saver`
+  use more aggressive batching for measurement and demonstration
+
+This makes `BB` useful for studying responsiveness versus wakeup cost inside a kernel you can actually read and explain.
+
 ## Replay And Tracing Model
 
 The replay subsystem records events that represent execution-relevant nondeterminism and system control flow.
@@ -139,7 +159,7 @@ Tasks are spawned by kernel subsystems such as `attack_sim`, `sysload`, and `lif
 
 ### `help`
 
-Prints the available shell commands as a comma-separated list.
+Prints the available shell commands one per line.
 
 ### `man <topic>`
 
@@ -197,6 +217,26 @@ Loads a disk-backed ELF image from `/bin/ring3demo`, maps it into an isolated us
 ### `mouse status`
 
 Prints whether PS/2 mouse support is active, the current tracked coordinates, button state, and packet count.
+
+### `power status`
+
+Prints the current power profile and counters for wakeups, coalesced keyboard events, keyboard flushes, queued network transmissions, and transmit flushes.
+
+### `power perf`
+
+Switches to the low-latency profile. Keyboard input and network transmit traffic are flushed immediately.
+
+### `power balanced`
+
+Switches to the default mixed profile. This keeps the shell responsive while still reducing some wakeups.
+
+### `power saver`
+
+Switches to the more aggressive batching profile. This is the clearest mode for demonstrating the imported `RESEARCH-OS` algorithm family.
+
+### `sim [count]`
+
+Simulates a burst of small `/net/tx` writes using the current power mode, waits for the kernel to flush queued traffic, and then prints both the network deltas and the multiline power metrics.
 
 ### `net send <payload>`
 

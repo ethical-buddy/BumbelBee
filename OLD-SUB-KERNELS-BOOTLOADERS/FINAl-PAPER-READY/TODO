@@ -1,4 +1,0 @@
-
--- implement some basic serial output so that debugging is easier
--- rewrite the sched -- done
--- complete virtIO disk driver and filesystem 

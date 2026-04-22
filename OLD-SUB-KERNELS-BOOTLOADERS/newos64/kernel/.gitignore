@@ -1,6 +1,0 @@
-# Ignore kernel binaries
-kernel
-kernel.elf
-
-# Ignore compilation products
-**/*.o
